@@ -1,7 +1,5 @@
 
 import os
-import sys
-import sqlite3
 import platform
 import tempfile
 from datetime import datetime
@@ -13,7 +11,7 @@ PY_VERSION = int(platform.python_version().split('.')[0])
 if PY_VERSION == 3:
 	from importlib import reload
 
-TEMP_PATH = tempfile.gettempdir()
+TEMP_PATH = tempfile.gettempdir().replace('\\', '/')
 
 try:
 	from . import sqlite_base
@@ -36,7 +34,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 
 		self.project = project
 
-		self.db_path = '{temp_path}/saveAndOpen_tool/files.db'
+		self.db_path = '{temp_path}/saveAndOpen_tool/files.db'.format(temp_path = TEMP_PATH)
 
 
 	def parse_data(self, data = {}):
@@ -84,16 +82,8 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		return result
 
 	def create_file_db(self):
-		'''
-		path [str]
-			|_ path step		ex.'T:/rnd/zeafrost/work/shot/101/S01/0020/anm'
-		'''
-		
 
-		self.db_path = self.db_path.format(temp_path=TEMP_PATH)
-		# print(self.db_path)
-
-		if os.path.exists(self.db_path):
+		if not os.path.exists(self.db_path):
 			self.create(
 				path=self.db_path, 
 				fields=['id', 'filename', 'description', 'create_at', 'update_at', 'user', 'path', 'thumbnail_path', 'project', 'dcc'], 
@@ -101,13 +91,31 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 
 			self.close_connection()
 
-	def insert_file_data(self, filepath='', description='', thumbnail_path='',user=''):
-		'''
-		path [str]
-			|_ path step		ex.'T:/rnd/zeafrost/work/shot/101/S01/0020/anm'
-		'''
+	def delete_file_db(self):
+		
+		if os.path.exists(self.db_path):
 
-		self.db_path = self.db_path.format(temp_path=TEMP_PATH)
+			os.remove(self.db_path)
+
+
+	def insert_file_data(self, filepath='', description='', thumbnail_path='',user='', project='', dcc='', values={}):
+		'''
+		|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
+		|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
+		|_user				ex. 'thaksaporn'
+		|_description		ex. 'file use for cache'
+		|_project			ex. 'FX_TEST'
+		|_dcc				ex. 'maya_2024'
+		
+		|_values [dict]
+			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
+			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
+			|_user				ex. 'thaksaporn'
+			|_description		ex. 'file use for cache'
+			|_project			ex. 'FX_TEST'
+			|_dcc				ex. 'maya_2024'
+
+		'''
 
 		if os.path.exists(self.db_path):
 			self.connect(path=self.db_path)
@@ -129,20 +137,32 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 
 		# parse date
 		#-----------
-		# date_at = datetime.utcnow()
 		date_at = datetime.now()
 
 		# insert row 
 		#-----------
-		values = {
-			'id': id_data,
-			'filename' : os.path.basename(filepath),
-			'description': description,
-			'create_at': date_at,
-			'update_at': date_at,
-			'user': user,
-			'path': filepath,
-			'thumbnail_path': thumbnail_path}
+		if values:
+			if not values.get('id'):
+				values['id'] = id_data
+
+			if not values.get('create_at'):
+				values['create_at'] = date_at
+
+			if not values.get('update_at'):
+				values['update_at'] = date_at
+
+		else:
+			values = {
+				'id': id_data,
+				'filename' : os.path.basename(filepath),
+				'description': description,
+				'create_at': date_at,
+				'update_at': date_at,
+				'user': user,
+				'path': filepath,
+				'thumbnail_path': thumbnail_path,
+				'project': project,
+				'dcc': dcc}
 
 		self.insert(table='files_data', values=values)
 		self.close_connection()
@@ -232,6 +252,6 @@ if __name__ == '__main__':
 	test_sqlite.create_file_db()
 	data = test_sqlite.search_file_data(filters= {})
 
-	# print(test_sqlite.db_path)
+	print(test_sqlite.db_path)
 	pprint(data)
 
