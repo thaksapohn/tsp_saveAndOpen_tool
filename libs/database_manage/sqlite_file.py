@@ -106,7 +106,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		|_description		ex. 'file use for cache'
 		|_project			ex. 'FX_TEST'
 		|_dcc				ex. 'maya_2024'
-		
+
 		|_values [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
 			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
@@ -243,15 +243,4 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 			
 
 
-
-
-if __name__ == '__main__':
-
-	test_sqlite = SQLITE_FILE_DB(project='zeafrost')
-
-	test_sqlite.create_file_db()
-	data = test_sqlite.search_file_data(filters= {})
-
-	print(test_sqlite.db_path)
-	pprint(data)
 

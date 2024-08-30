@@ -205,20 +205,4 @@ class SQLITE_BASE(object):
 				self.cursor.execute(where_txt, data)
 				self.connection.commit()
 
-	
 
-
-if __name__ == '__main__':
-	path = "T:/rnd/zeafrost/work/shot/101/S01/0010/anm/.yggpipdata/files.db"
-	db_local = SQLITE_BASE()
-	# db_local.create(path=path, fields=['id', 'name'], table='users')
-	db_local.connect(path=path)
-
-	# db_local.insert(table='users', values={'id': 2, 'name': 'thaksaporn'})
-	print(db_local.search(table='users', filters={}))
-	# db_local.update(table='users', filters={'name': 'thaksaporn'}, values={'name': 'phone'})
-	# db_local.delete(table='users', filters={'name': 'phone'})
-
-
-
-	db_local.close_connection()
