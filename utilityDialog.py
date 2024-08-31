@@ -5,16 +5,13 @@ import os
 import sys
 import ctypes
 import platform
-import glob
 from pprint import pprint
 
-try:
-	from PySide2.QtCore import *
-	from PySide2.QtWidgets import *
-	from PySide2.QtGui import *
-except:
-	from PySide.QtCore import *
-	from PySide.QtGui import *
+
+from PySide2.QtCore import *
+from PySide2.QtWidgets import *
+from PySide2.QtGui import *
+
 
 # Setup Python Version
 #---------------------
@@ -24,38 +21,9 @@ if PY_VERSION == 3:
 
 MODULE_PATH = os.path.dirname(__file__).replace('\\','/')
 
-EP_CODE = os.getenv("YGG_EPISODE") or ''
-SEQ_CODE = os.getenv("YGG_SEQUENCE") or ''
-SHOT_CODE = os.getenv("YGG_SHOT") or ''
-STEP_CODE = os.getenv("YGG_STEP") or ''
-PROJ_CODE = os.getenv("YGG_PROJECT") or ''
-ASSET_CODE = os.getenv("YGG_ASSET") or ''
-ASSETTYPE_CODE = os.getenv("YGG_ASSETTYPE") or ''
-VARIATION_CODE = os.getenv("YGG_ASSETVARIATION") or ''
-TASKS_DATA = os.getenv("YGG_TASKS_DATA") or {}
+import libs.src.saveAnoOpen_func as func
+reload(func)
 
-ENTITY_CODE = os.getenv("YGG_ENTITY")
-if ENTITY_CODE:
-	ENTITY = ENTITY_CODE
-
-else:
-	ENTITY = 'shot'
-	# if EP_CODE:
-	# 	ENTITY = 'shot'
-	# else:
-	# 	ENTITY = 'asset'
-
-try: 
-	from . import saveAndOpenTool_func as func
-	reload(func)
-except:
-	import saveAndOpenTool_func as func
-	reload(func)
-
-#--------------------------------------------
-# TEST DATA
-# PROJ_CODE = 'TWH'	
-# ENTITY = 'asset'
 
 class ItemTreeSelect(QDialog):
 	def __init__(self, parent = None, episode=False, sequence=False, text=''):
@@ -272,7 +240,7 @@ class ItemTreeFileSelect(QDialog):
 			|_owner			ex. 'thaksaporn'
 			|_permssion		ex. 'W/R'
 			|_comment		ex. 'test publish'
-			|_thumbnail		ex. '"T:/rnd/zeafrost/work/shot/101/S01/0020/lay/.yggpipdata/thumbnail/zeafrost_101_S01_0020_lay_master_v001/20231123_1133.1001.jpg"'
+			|_thumbnail		ex. '"T:/rnd/zeafrost/work/shot/101/S01/0020/lay/.data/thumbnail/zeafrost_101_S01_0020_lay_master_v001/20231123_1133.1001.jpg"'
 		'''
 
 		self.pressPose = None

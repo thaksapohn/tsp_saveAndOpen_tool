@@ -1,0 +1,129 @@
+QDialog{
+    background-color: rgb(21, 21, 21); 
+    border: none;
+    border-radius: 5px;
+}
+QLabel{
+    color: rgb(190, 190, 190);
+    font-size: 12px;
+}
+QTreeView{
+    outline:none;
+    background:rgba(0,0,0,0);
+    border: none;
+    color:rgb(190, 190, 190);
+}
+QHeaderView:section{
+    border: 0px solid;
+}
+QTreeWidget:item{
+    background:rgba(0,0,0,0);
+    border-radius:2px;
+    border: none;
+    height: 30;
+}
+QTreeWidget:item:hover{
+    background:rgba(20,20,20,0);
+    color:rgb(190,190,190);
+    boder: none;
+}
+QTreeWidget:item:selected{
+    background:rgb(55, 55, 55);
+    border: none;
+}
+QAbstractItemView{
+    selection-background-color:rgba(55, 55, 55, 0);
+    border: none;
+    outline:none;
+}
+QScrollBar{
+    border:none; 
+    background:rgb(50,50,50); 
+    width:5px; 
+    height:5px; 
+    margin-right: 0px; 
+    border-radius:2px;
+}
+QScrollBar:handle{
+    background: #3b87d3; 
+    border-radius:2px; 
+    border:1px solid rgb(50,50,50); 
+    margin-right: 0px;
+}
+QScrollBar:handle:hover{
+    background: #3b87d3; 
+    border:1px solid #3b87d3;
+}
+QScrollBar:add-page{
+    background:rgba(0,0,0,0);
+}
+QScrollBar:sub-page{
+    background:rgba(0,0,0,0);
+}
+QScrollBar:add-line{
+    background:rgba(0,0,0,0);
+}
+QScrollBar:sub-line{
+    background:rgba(0,0,0,0);
+}
+QPushButton{
+    background: rgb(0, 0, 0);
+    border: none;
+    border-radius: 3px;
+    color:rgb(190, 190, 190)
+}
+QPushButton:hover{
+    background: #3b87d3;
+    color: rgb(0, 0, 0)
+}
+QCheckBox{
+    color: rgb(190, 190, 190);
+    margin-left: 10px;
+    margin-right: 5px;
+}
+QCheckBox:!enabled{
+    color:rgb(70,70,70);
+}
+QTextEdit{
+    background: rgb(30, 30, 30);
+    color: rgb(190,190,190);
+    border: none;
+    border-bottom: 2px solid rgb(60, 60, 60);
+    border-radius: 2px;
+}
+QComboBox{
+    color:rgb(220,220,220); 
+    background:rgb(33,33,33); 
+    padding-left:7px; 
+    border:none; 
+    border-bottom:1px solid rgb(100,100,100);
+}
+QComboBox:hover:!pressed{
+    border-color:rgb(200,200,200);
+}
+QComboBox:drop-down{
+    background-color:rgba(70,70,70,0); 
+    width:24px; 
+    border:none; 
+    margin-right:2px;
+}
+QAbstractItemView:item{
+    height:22px; 
+    background:rgba(22,22,22,0);}
+QAbstractItemView:item:selected{
+    border: none;
+    outline: none;
+}
+QAbstractItemView:item:hover{
+    background:rgb(55, 55, 55);
+}
+QSplitter{
+    background: rgba(0,0,0,0)
+}
+QSplitter:handle{
+    background:rgb(70,70,70); 
+    border: none;
+    margin-top:25px; 
+    margin-bottom:25px; 
+    min-width: 2px; 
+    max-width: 2px}

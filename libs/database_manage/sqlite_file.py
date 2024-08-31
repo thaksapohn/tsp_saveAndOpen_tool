@@ -82,6 +82,9 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		return result
 
 	def create_file_db(self):
+		"""
+		The function creates a file-based database if it does not already exist.
+		"""
 
 		if not os.path.exists(self.db_path):
 			self.create(
@@ -92,6 +95,9 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 			self.close_connection()
 
 	def delete_file_db(self):
+		"""
+		The function `delete_file_db` deletes a file specified by the `db_path` attribute if it exists.
+		"""
 		
 		if os.path.exists(self.db_path):
 
@@ -101,7 +107,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 	def insert_file_data(self, filepath='', description='', thumbnail_path='',user='', project='', dcc='', values={}):
 		'''
 		|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
-		|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
+		|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.data/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
 		|_user				ex. 'thaksaporn'
 		|_description		ex. 'file use for cache'
 		|_project			ex. 'FX_TEST'
@@ -109,7 +115,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 
 		|_values [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
-			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
+			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.data/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
 			|_user				ex. 'thaksaporn'
 			|_description		ex. 'file use for cache'
 			|_project			ex. 'FX_TEST'
@@ -168,6 +174,16 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		self.close_connection()
 
 	def update_file_data(self, filters={}, values={}):
+		"""
+		The function `update_file_data` updates data in a database table based on specified filters and
+		values.
+		
+		:param filters: The `filters` parameter in the `update_file_data` method is a dictionary that can
+		contain the following keys:
+		:param values: The `values` parameter in the `update_file_data` function is a dictionary that
+		contains data to be updated in the database table `files_data`. It includes the following keys and
+		their corresponding examples:
+		"""
 		'''
 		|_filters [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
@@ -177,7 +193,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		|_values [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
 			|_name				ex. 'zeafrost_101_S01_0020_anm_blocking_v003.ma'
-			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.yggpipdata/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
+			|_thumbnail			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/.data/zeafrost_101_S01_0020_anm_blocking_v003.jpg'
 		'''
 
 		self.db_path = self.db_path.format(temp_path=TEMP_PATH)
@@ -203,6 +219,14 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		self.close_connection()
 
 	def search_file_data(self, filters={}):
+		"""
+		The `search_file_data` function searches for data in a database based on specified filters.
+		
+		:param filters: The `filters` parameter in the `search_file_data` method is a dictionary that can
+		contain the following keys:
+		:return: The `search_file_data` method returns a list of search results based on the provided
+		filters.
+		"""
 		'''
 		|_filters [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
@@ -225,6 +249,11 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		return result
 
 	def delete_file_data(self, filters={}):
+		"""
+		This function deletes data from a database table based on specified filters.
+		
+		:param filters: The `filters` parameter is a dictionary that can contain the following keys:
+		"""
 		'''
 		|_filters [dict]
 			|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
