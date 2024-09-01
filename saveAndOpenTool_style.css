@@ -25,7 +25,7 @@ QTreeWidget:item{
 QTreeWidget:item:hover{
     background:rgba(20,20,20,0);
     color:rgb(190,190,190);
-    boder: none;
+    border: none;
 }
 QTreeWidget:item:selected{
     background:rgb(55, 55, 55);

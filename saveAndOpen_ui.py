@@ -6,6 +6,7 @@ import sys
 import time
 import platform
 import logging
+from pprint import pprint
 
 from PySide2.QtCore import *
 from PySide2.QtWidgets import *
@@ -65,6 +66,8 @@ class SceneManagerUI(QDialog):
 		self.initTitleWidget()
 		self.initBodyWidget()
 		self.initBottomWidget()
+
+		self.showListProject()
 
 	def mousePressEvent(self,event):
 		self.moving = True
@@ -160,6 +163,7 @@ class SceneManagerUI(QDialog):
 
 		self.createProjectBtn = QPushButton('+')
 		self.createProjectBtn.setFixedSize(25,25)
+		self.createProjectBtn.clicked.connect(self.showAddProject)
 		projectTitleLayout.addWidget(self.createProjectBtn)
 		self.createProjectBtn.setStyleSheet('''
 		QPushButton{
@@ -207,6 +211,14 @@ class SceneManagerUI(QDialog):
 		recentLabel = QLabel('Recent')
 		recentTitleLayout.addWidget(recentLabel)
 
+		self.recentSearch = util.SearchBoxWidget()
+		# self.recentSearch.line.textChanged.connect(self.inputrecentSearch)
+		# self.recentSearch.searchBtn.clicked.connect(self.inputrecentSearch)
+		self.recentSearch.setStyleSheet('''
+			border-radius: 0px;  border-bottom: 2px solid rgba(70, 70, 70, 100); background: rgba(40,40,40,100)''')
+		self.recentSearch.setFixedSize(180, 22)
+		recentTitleLayout.addWidget(self.recentSearch)
+
 		self.recentTree = QTreeWidget()
 		self.recentTree.setStyleSheet('padding-left: 5px; border: 0px;')
 		recentLayout.addWidget(self.recentTree)
@@ -237,7 +249,7 @@ class SceneManagerUI(QDialog):
 		locationTitleWidget.setLayout(locationTitleLayout)
 		locationLayout.addWidget(locationTitleWidget)
 
-		locationLabel = QLabel('Location')
+		locationLabel = QLabel('Location File')
 		locationTitleLayout.addWidget(locationLabel)
 
 		self.fileSearch = util.SearchBoxWidget()
@@ -253,7 +265,6 @@ class SceneManagerUI(QDialog):
 		self.backBtn.setStyleSheet('''
 			QPushButton{border:none; image:url('''+MODULE_PATH+'''/icons/arrow_up.png);border:2px solid rgb(66,66,66); border-radius:4px;}
 			QPushButton:hover:!pressed{background:rgb(44,44,44); border-color:rgb(85,85,85); color:rgb(200,200,200);}''')
-
 
 		browseLayout = QHBoxLayout()
 		browseLayout.setContentsMargins(0,0,0,0)
@@ -301,6 +312,78 @@ class SceneManagerUI(QDialog):
 
 		bottomLabel = QLabel('Dcc')
 		self.bottomLayout.addWidget(bottomLabel)
+
+	def showAddProject(self):
+		
+		self.addProjectDialog = util.ProjectAddDialog()
+		self.addProjectDialog.add_btn.clicked.connect(self.addProject)
+		self.addProjectDialog.exec_()
+
+	def addProject(self):
+		
+		name = self.addProjectDialog.name_edit.text()
+		path = self.addProjectDialog.path_edit.text().replace('\\', '/')
+		self.addProjectDialog.close()
+
+		# add project to db
+		#------------------
+		check_crate = func.create_project(name=name, path=path)
+
+		# if check_crate:
+		self.showListProject()
+
+		# select project item
+		#--------------------
+		items = self.projectTree.findItems(name, Qt.MatchExactly)
+		item_select = ''
+
+		for item in items:
+			name_item = item.text(0)
+			if name_item == name:
+				item_select = item
+
+		if item_select:
+			item_select.setSelected(True)
+			self.projectTree.scrollToItem(item_select)
+
+
+	def showListProject(self):
+
+		self.projectTree.clear()
+
+		project_result = func.search_project(filters={})
+		projects = []
+		check_other = False
+		
+		# add item to widget
+		#-------------------
+		for data in project_result:
+			name = data['name']
+			if name == '_other':
+				check_other = True
+			else:
+				projects.append(name)
+
+		projects.sort()
+		if check_other:
+			projects.insert(0, '_other')
+
+		for name in projects:
+			project_item = QTreeWidgetItem(self.projectTree)
+			# ep_widget = util.ItemTreeSelect(parent=self.seq_tree, episode=True, text=ep)
+			self.projectTree.addTopLevelItem(project_item)
+
+			project_item.setText(0, name)
+
+			# ep_size = ep_widget.size()
+			# ep_item.setSizeHint(0, ep_size)
+			
+			# self.seq_tree.setItemWidget(ep_item, 0, ep_widget)
+
+	
+
+
+
 
 
 # ------------------------------------------- #
