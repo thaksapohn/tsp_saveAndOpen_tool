@@ -13,7 +13,14 @@ QTreeView{
     border: none;
     color:rgb(190, 190, 190);
 }
+QListWidget{
+    outline:none;
+    background:rgba(0,0,0,0);
+    border: none;
+    color:rgb(190, 190, 190);
+}
 QHeaderView:section{
+    background:rgba(0,0,0,0);
     border: 0px solid;
 }
 QTreeWidget:item{
@@ -28,6 +35,7 @@ QTreeWidget:item:hover{
     border: none;
 }
 QTreeWidget:item:selected{
+    color: rgb(190,190,190);
     background:rgb(55, 55, 55);
     border: none;
 }

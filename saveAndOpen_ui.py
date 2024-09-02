@@ -19,7 +19,6 @@ if PY_VERSION == 3:
 	from importlib import reload
 
 MODULE_PATH = os.path.dirname(__file__).replace('\\', '/')
-print(MODULE_PATH)
 PATHS = [ MODULE_PATH ]
 for path in PATHS:
 	if not path in sys.path:
@@ -56,6 +55,8 @@ class SceneManagerUI(QDialog):
 		self.setMinimumSize(1300,700)
 		self.setContentsMargins(0,0,0,0)
 
+		self.dcc = func.create_db_program()
+
 		self.css_main = ''
 
 		with open(CSS_PATH, 'r') as css:
@@ -68,6 +69,7 @@ class SceneManagerUI(QDialog):
 		self.initBottomWidget()
 
 		self.showListProject()
+		self.showListDcc()
 
 	def mousePressEvent(self,event):
 		self.moving = True
@@ -305,13 +307,39 @@ class SceneManagerUI(QDialog):
 
 	def initBottomWidget(self):
 
-		self.bottomLayout = QHBoxLayout()
+		self.bottomLayout = QVBoxLayout()
 		bottomWidget = QDialog()
 		bottomWidget.setLayout(self.bottomLayout)
 		self.mainLayout.addWidget(bottomWidget)
 
+		bottomTitleLayout = QHBoxLayout()
+		bottomTitleLayout.setAlignment(Qt.AlignLeft)
+		bottomTitleLayout.setContentsMargins(0,0,0,0)
+		bottomTitleWidget = QDialog()
+		bottomTitleWidget.setLayout(bottomTitleLayout)
+		self.bottomLayout.addWidget(bottomTitleWidget)
+
 		bottomLabel = QLabel('Dcc')
-		self.bottomLayout.addWidget(bottomLabel)
+		bottomLabel.setFixedWidth(25)
+		bottomTitleLayout.addWidget(bottomLabel)
+
+		self.dccRefreshBtn = QPushButton()
+		self.dccRefreshBtn.clicked.connect(self.doRefreshDcc)
+		self.dccRefreshBtn.setFixedSize(15,15)
+		self.dccRefreshBtn.setStyleSheet('''
+			QPushButton{border:none; image:url('''+MODULE_PATH+'''/icons/refresh.png);border:none; border-radius:4px;background: rgba(0,0,0,0)}
+			QPushButton:hover:!pressed{background:rgb(44,44,44); border-color:rgb(85,85,85); color:rgb(200,200,200);}''')
+		bottomTitleLayout.addWidget(self.dccRefreshBtn)
+
+		self.dccList = QListWidget()
+		self.dccList.setViewMode(QListView.IconMode)
+		self.dccList.setResizeMode(QListWidget.Adjust)
+		self.dccList.setSizeAdjustPolicy(QListWidget.AdjustToContents)
+		self.dccList.setWrapping(True)
+		self.dccList.setMovement(QListWidget.Static)
+		self.dccList.setIconSize(QSize(142.4, 80))
+		self.dccList.setSpacing(15)
+		self.bottomLayout.addWidget(self.dccList)
 
 	def showAddProject(self):
 		
@@ -346,7 +374,6 @@ class SceneManagerUI(QDialog):
 			item_select.setSelected(True)
 			self.projectTree.scrollToItem(item_select)
 
-
 	def showListProject(self):
 
 		self.projectTree.clear()
@@ -370,17 +397,41 @@ class SceneManagerUI(QDialog):
 
 		for name in projects:
 			project_item = QTreeWidgetItem(self.projectTree)
-			# ep_widget = util.ItemTreeSelect(parent=self.seq_tree, episode=True, text=ep)
+			project_widget = util.ItemTreeProject(text=name)
 			self.projectTree.addTopLevelItem(project_item)
 
-			project_item.setText(0, name)
+			# project_item.setText(0, name)
 
-			# ep_size = ep_widget.size()
-			# ep_item.setSizeHint(0, ep_size)
+			project_size = project_widget.size()
+			project_item.setSizeHint(0, project_size)
 			
-			# self.seq_tree.setItemWidget(ep_item, 0, ep_widget)
+			self.projectTree.setItemWidget(project_item, 0, project_widget)
 
-	
+
+		self.projectTree.clearSelection()
+
+	def showListDcc(self):
+
+		self.dccList.clear()
+
+		dcc = func.get_dcc()
+		sorted_dcc = sorted(dcc, key= lambda x: x['name'])
+
+		for data in sorted_dcc:
+			item = util.DccItemWidget(self.dccList)
+			name = '{} {}'.format(data['shortname'], data['version'])
+			item.setText(name)
+			item.set_thumbnail(data['shortname'])
+			item.setToolTip(data['name'])
+
+			self.dccList.addItem(item)
+
+	def doRefreshDcc(self):
+
+		self.dcc = func.create_db_program(clear=True)
+		self.showListDcc()
+
+		
 
 
 
@@ -390,8 +441,6 @@ class SceneManagerUI(QDialog):
 #               RUN TOOL FUNC                 #
 # ------------------------------------------- #
 def main(state='open'):
-
-	global ENTITY 
 
 	startTime = time.time()
 
@@ -439,3 +488,4 @@ def main(state='open'):
 
 if __name__ == '__main__':
 	main()
+	# pprint(func.check_list_project())

@@ -25,45 +25,18 @@ import libs.src.saveAnoOpen_func as func
 reload(func)
 
 
-class ItemTreeSelect(QDialog):
-	def __init__(self, parent = None, episode=False, sequence=False, text=''):
+class ItemTreeProject(QDialog):
+	def __init__(self, parent = None, text=''):
 		super(self.__class__, self).__init__(parent)
+
+		self.project = text
 
 		self.main_layout = QHBoxLayout()
 		self.main_layout.setContentsMargins(5,0,0,0)
 		self.main_layout.setSpacing(0)
 		self.setLayout(self.main_layout)
 
-		if episode:
-			icon = QIcon('{}/icons/episode.png'.format(MODULE_PATH))
-		elif text == 'cam':
-			icon = QIcon('{}/icons/category/cam.png'.format(MODULE_PATH))
-		elif text == 'char':
-			icon = QIcon('{}/icons/category/char.png'.format(MODULE_PATH))
-		elif text == 'prop':
-			icon = QIcon('{}/icons/category/prop.png'.format(MODULE_PATH))
-		elif text == 'set':
-			icon = QIcon('{}/icons/category/set.png'.format(MODULE_PATH))
-		elif text == 'cmb':
-			icon = QIcon('{}/icons/category/cmb.png'.format(MODULE_PATH))
-		elif text == 'dmp':
-			icon = QIcon('{}/icons/category/dmp.png'.format(MODULE_PATH))
-		elif text == 'env':
-			icon = QIcon('{}/icons/category/env.png'.format(MODULE_PATH))
-		elif text == 'fx':
-			icon = QIcon('{}/icons/category/fx.png'.format(MODULE_PATH))
-		elif text == 'master':
-			icon = QIcon('{}/icons/category/all.png'.format(MODULE_PATH))
-		elif text == 'scat':
-			icon = QIcon('{}/icons/category/scat.png'.format(MODULE_PATH))
-		elif text == 'trn':
-			icon = QIcon('{}/icons/category/trn.png'.format(MODULE_PATH))
-		elif text == 'vhcl':
-			icon = QIcon('{}/icons/category/vhcl.png'.format(MODULE_PATH))
-		elif text == 'elem':
-			icon = QIcon('{}/icons/category/all.png'.format(MODULE_PATH))
-		else:
-			icon = QIcon('{}/icons/sequence.png'.format(MODULE_PATH))
+		icon = QIcon('{}/icons/folder.png'.format(MODULE_PATH))
 
 		pixmap = icon.pixmap(23,23, QIcon.Active, QIcon.On)
 		inst_icon = QLabel()
@@ -110,6 +83,34 @@ class SearchBoxWidget(QDialog):
 
 		self.setStyleSheet('QDialog{background: rgb(40, 40, 40); border-bottom: 2px solid rgb(100, 100, 100)}')
 
+class DccItemWidget(QListWidgetItem):
+	def __init__(self, *args, **kwargs):
+		super(DccItemWidget, self).__init__(*args, **kwargs)
+
+		self.set_thumbnail()
+
+	def set_thumbnail(self, dcc=''):
+
+		path_thumb = '{MODULE_PATH}/icons/dcc'.format(MODULE_PATH=MODULE_PATH)
+
+		if dcc == 'maya':
+			pixmap = QPixmap('{path_thumb}/maya_default_a.png'.format(path_thumb=path_thumb))
+			pixmap = pixmap.scaled(40, 40, Qt.KeepAspectRatio)
+
+		elif dcc == 'houdini':
+			pixmap = QPixmap('{path_thumb}/houdini_default_a.png'.format(path_thumb=path_thumb))
+			pixmap = pixmap.scaled(40, 40, Qt.KeepAspectRatio)
+
+		elif dcc == 'blender':
+			pixmap = QPixmap('{path_thumb}/blender.png'.format(path_thumb=path_thumb))
+			pixmap = pixmap.scaled(40, 40, Qt.KeepAspectRatio)
+
+		else:
+			pixmap = QPixmap('{path_thumb}/tool.png'.format(path_thumb=path_thumb))
+			pixmap = pixmap.scaled(40, 40)
+
+		self.setIcon(QIcon(pixmap))
+		self.setSizeHint(QSize(65, 60))
 
 class ConfirmDialog(QDialog):
 	def __init__(self, parent = None):
