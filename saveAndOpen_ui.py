@@ -30,11 +30,13 @@ reload(func)
 import utilityDialog as util
 reload(util)
 
-DCC = ''
+DCC = os.getenv("SAO_DCC") or ''
+PROJECT = os.getenv("SAO_PROJECT") or ''
 CSS_PATH =  '{}/saveAndOpenTool_style.css'.format(MODULE_PATH)
+EXT_FILE = []
 
 class SceneManagerUI(QDialog):
-	def __init__(self, parent = None):
+	def __init__(self, parent = None, ext=[], project='_other'):
 		super(self.__class__, self).__init__(parent)
 
 		self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
@@ -57,10 +59,11 @@ class SceneManagerUI(QDialog):
 		self.setContentsMargins(0,0,0,0)
 
 		self.dcc = func.create_db_program()
+		self.ext = ext
 		self.dcc_dataItem = {}
 		self.project_dataItem = {}
-		self.project = '_other'
-
+		self.project = project
+		self.path_lookIn = func.get_path_default(project)
 		self.css_main = ''
 
 		with open(CSS_PATH, 'r') as css:
@@ -70,10 +73,16 @@ class SceneManagerUI(QDialog):
 
 		self.initTitleWidget()
 		self.initBodyWidget()
-		self.initBottomWidget()
+
+		if not DCC:
+			self.initBottomWidget()
+			self.showListDcc()
 
 		self.showListProject()
-		self.showListDcc()
+
+		self.showLookInPath()
+		self.showFileItems()
+		
 
 	def mousePressEvent(self,event):
 		self.moving = True
@@ -134,7 +143,10 @@ class SceneManagerUI(QDialog):
 	def initBodyWidget(self):
 
 		self.bodyLayout = QSplitter()
-		self.bodyLayout.setFixedHeight(600)
+		if DCC:
+			self.bodyLayout.setFixedHeight(730)
+		else:
+			self.bodyLayout.setFixedHeight(600)
 		self.mainLayout.addWidget(self.bodyLayout)
 
 		self.initProjectWidget()
@@ -263,6 +275,7 @@ class SceneManagerUI(QDialog):
 		locationTitleLayout.addWidget(self.fileSearch)
 
 		self.backBtn = QPushButton()
+		self.backBtn.clicked.connect(self.doBackFile)
 		self.backBtn.setFixedSize(36,24)
 		self.backBtn.setStyleSheet('''
 			QPushButton{border:none; image:url('''+MODULE_PATH+'''/icons/arrow_up.png);border:2px solid rgb(66,66,66); border-radius:4px;}
@@ -276,6 +289,7 @@ class SceneManagerUI(QDialog):
 		browseLayout.addWidget(lookInLabel)
 
 		self.pathBox = QLineEdit()
+		self.pathBox.setText(self.path_lookIn)
 		self.pathBox.setFixedHeight(25)
 		self.pathBox.setStyleSheet('QLineEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
 		browseLayout.addWidget(self.pathBox)
@@ -284,6 +298,7 @@ class SceneManagerUI(QDialog):
 
 		self.fileTree = QTreeWidget()
 		locationLayout.addWidget(self.fileTree)
+		self.fileTree.itemDoubleClicked.connect(self.doDoubleClickFile)
 		self.fileTree.setStyleSheet('padding-left: 5px; border: 0px;')
 		self.fileTree.setStyleSheet(self.css_main)
 		self.fileTree.setRootIsDecorated(False)
@@ -292,23 +307,43 @@ class SceneManagerUI(QDialog):
 		self.fileTree.setAutoScroll(False)
 		self.fileTree.setContextMenuPolicy(Qt.CustomContextMenu)
 		self.fileTree.setHeaderLabels(['  name', 'date','owner', 'comment'])
-		self.fileTree.setColumnWidth(0, 280)
+		self.fileTree.setColumnWidth(0, 350)
 		self.fileTree.setColumnWidth(1, 95)
 		self.fileTree.setColumnWidth(2, 70)
 
 		# command for sort tree item
 		#---------------------------
-		self.fileTree.sortByColumn(0,Qt.AscendingOrder)
+		self.fileTree.sortByColumn(4,Qt.AscendingOrder)
 		self.fileTree.setSortingEnabled(True)
 		self.fileTree.header().setSortIndicatorShown(False)
 
 		fileScrollbar = QScrollBar()
 		self.fileTree.setVerticalScrollBar(fileScrollbar)
 
+		name_label = QLabel('Name :')
+		locationLayout.addWidget(name_label)
+
+		name_layout = QHBoxLayout()
+		locationLayout.addLayout(name_layout)
+
+		self.name_edit = QLineEdit()
+		self.name_edit.setFixedHeight(25)
+		self.name_edit.setStyleSheet('QLineEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
+		name_layout.addWidget(self.name_edit)
+
+		self.saveBtn = QPushButton('Save')
+		self.saveBtn.setFixedSize(100, 25)
+		name_layout.addWidget(self.saveBtn)
+
+		self.openBtn = QPushButton('Open')
+		self.openBtn.setFixedSize(100, 25)
+		name_layout.addWidget(self.openBtn)
+
 	def initBottomWidget(self):
 
 		self.bottomLayout = QVBoxLayout()
 		bottomWidget = QDialog()
+		# bottomWidget.setFixedHeight(150)
 		bottomWidget.setLayout(self.bottomLayout)
 		self.mainLayout.addWidget(bottomWidget)
 
@@ -381,6 +416,7 @@ class SceneManagerUI(QDialog):
 		self.project_dataItem = {}
 
 		project_result = func.search_project(filters={})
+		self.project_data = {}
 		projects = []
 		check_other = False
 		
@@ -392,6 +428,8 @@ class SceneManagerUI(QDialog):
 				check_other = True
 			else:
 				projects.append(name)
+
+			self.project_data[name] = copy.deepcopy(data)
 
 		projects.sort()
 		if check_other:
@@ -410,9 +448,9 @@ class SceneManagerUI(QDialog):
 			project_item.setSizeHint(0, project_size)
 			
 			self.projectTree.setItemWidget(project_item, 0, project_widget)
-			self.project_dataItem[str(project_item)] = {'name': name}
+			self.project_dataItem[str(project_item)] = {'name': name, path : self.project_data[name]['path']}
 
-			if name == '_other':
+			if name == self.project:
 				itemSelect = project_item
 
 		if itemSelect:
@@ -452,7 +490,7 @@ class SceneManagerUI(QDialog):
 		if str(current_item) in self.dcc_dataItem.keys():
 
 			path = self.dcc_dataItem[str(current_item)]['path']
-			func.open_dcc(path=path, project=self.project)
+			func.open_dcc(path=path, project=self.project, dcc=self.dcc_dataItem[str(current_item)]['shortname'])
 
 		QApplication.restoreOverrideCursor()
 
@@ -461,6 +499,110 @@ class SceneManagerUI(QDialog):
 		project_item = self.projectTree.currentItem()
 		if project_item and str(project_item) in self.project_dataItem.keys():
 				self.project = self.project_dataItem[str(project_item)]['name']
+
+	def showFileItems(self):
+
+		path = self.pathBox.text()
+		self.fileTree.clear()
+
+		folders_path = []
+		files_path = []
+
+		if path:
+			if os.path.exists(path):
+				for item in os.listdir(path):
+					fullpath = '{}/{}'.format(path, item)
+					if '.' in item:
+						ext = item.rpartition('.')[-1]
+						if ext in self.ext:
+							files_path.append(fullpath)
+					else:
+						folders_path.append(fullpath)
+
+		else:
+			folders_path = ["{}:/".format(d) for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+
+		folders_path.sort()
+		files_path.sort()
+
+		paths = folders_path + files_path
+
+		for path in paths:
+
+			item = QTreeWidgetItem(self.fileTree)
+			self.fileTree.addTopLevelItem(item)
+
+			data_file = func.get_data_file(path)
+
+			if os.path.isdir(path):
+
+				item.setIcon(0, QIcon('{}/icons/folder.png'.format(MODULE_PATH)))
+
+			else:
+
+				if path.endswith('.ma'):
+					item.setIcon(0, QIcon('{}/icons/ma_file.png'.format(MODULE_PATH)))
+
+				elif path.endswith('.mb'):
+					item.setIcon(0, QIcon('{}/icons/mb_file.png'.format(MODULE_PATH)))
+					
+				elif path.endswith('.hip') or path.endswith('.hiplc') or path.endswith('.hipnc'):
+					item.setIcon(0, QIcon('{}/icons/houdini.png'.format(MODULE_PATH)))
+
+				else:
+					item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
+
+				item.setText(1,data_file['date'])
+				item.setText(2,data_file['owner'])
+
+			if path.endswith('/'):
+				item.setText(0, path)
+
+			else:
+				item.setText(0, os.path.basename(path))
+
+	def doDoubleClickFile(self):
+		
+		dir_path = self.pathBox.text()
+
+		item= self.fileTree.currentItem()
+		item_txt = item.text(0)
+
+		if dir_path:
+			if dir_path.endswith('/'):
+				fullpath = '{}{}'.format(dir_path, item_txt)
+			else:
+				fullpath = '{}/{}'.format(dir_path, item_txt)
+		else:
+			fullpath = item_txt
+
+		if os.path.isdir(fullpath):
+			self.pathBox.setText(fullpath)
+			self.showFileItems()
+
+	def doBackFile(self):
+
+		path = self.pathBox.text()
+		dirpath = ''
+
+		if not path.endswith('/'):
+			dirpath = os.path.dirname(path)
+
+		self.pathBox.setText(dirpath)
+		self.showFileItems()
+
+	def showLookInPath(self):
+
+		item = self.projectTree.currentItem()
+		project = item.text(0)
+		if not project:
+			project = self.project
+
+		if project in self.project_data.keys():
+			path = self.project_data[project]['path']
+			self.pathBox.setText(path)
+
+
 
 
 
@@ -489,8 +631,9 @@ def main(state='open'):
 			maya_ui.close()
 		except:
 			pass
-		maya_ui = SceneManagerUI(parent=prt, state=state)
+		maya_ui = SceneManagerUI(parent=prt, ext=['ma', 'mb'], project=PROJECT)
 		maya_ui.show()
+		
 
 
 	elif DCC == 'houdini':
@@ -500,12 +643,12 @@ def main(state='open'):
 		temp = hou.ui.mainQtWindow()
 		temp.setStyleSheet('background:none;')
 		
-		houdini_ui = SceneManagerUI(parent=temp, state=state)
+		houdini_ui = SceneManagerUI(parent=temp, ext=['hiplc', 'hip', 'hipnc'], project=PROJECT)
 		houdini_ui.show()
 
 	else:
 		app = QApplication(sys.argv)
-		ui = SceneManagerUI()
+		ui = SceneManagerUI(ext=['ma', 'mb', 'hiplc', 'hip', 'hipnc'])
 		ui.show()
 		sys.exit(app.exec_())
 
