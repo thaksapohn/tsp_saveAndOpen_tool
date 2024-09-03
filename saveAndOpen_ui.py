@@ -6,6 +6,7 @@ import sys
 import time
 import platform
 import logging
+import copy
 from pprint import pprint
 
 from PySide2.QtCore import *
@@ -56,6 +57,9 @@ class SceneManagerUI(QDialog):
 		self.setContentsMargins(0,0,0,0)
 
 		self.dcc = func.create_db_program()
+		self.dcc_dataItem = {}
+		self.project_dataItem = {}
+		self.project = '_other'
 
 		self.css_main = ''
 
@@ -128,11 +132,6 @@ class SceneManagerUI(QDialog):
 		''')
 
 	def initBodyWidget(self):
-		
-		# self.bodyLayout = QHBoxLayout()
-		# bodyWidget = QDialog()
-		# bodyWidget.setLayout(self.bodyLayout)
-		# self.mainLayout.addWidget(bodyWidget)
 
 		self.bodyLayout = QSplitter()
 		self.bodyLayout.setFixedHeight(600)
@@ -191,6 +190,7 @@ class SceneManagerUI(QDialog):
 		self.projectTree.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 		self.projectTree.setAutoScroll(True)
 		self.projectTree.setStyleSheet(self.css_main)
+		self.projectTree.itemClicked.connect(self.doClickProject)
 		
 	def initRecentWidget(self):
 
@@ -339,6 +339,7 @@ class SceneManagerUI(QDialog):
 		self.dccList.setMovement(QListWidget.Static)
 		self.dccList.setIconSize(QSize(142.4, 80))
 		self.dccList.setSpacing(15)
+		self.dccList.itemDoubleClicked.connect(self.doOpenDcc)
 		self.bottomLayout.addWidget(self.dccList)
 
 	def showAddProject(self):
@@ -377,6 +378,7 @@ class SceneManagerUI(QDialog):
 	def showListProject(self):
 
 		self.projectTree.clear()
+		self.project_dataItem = {}
 
 		project_result = func.search_project(filters={})
 		projects = []
@@ -395,6 +397,8 @@ class SceneManagerUI(QDialog):
 		if check_other:
 			projects.insert(0, '_other')
 
+		itemSelect = ''
+
 		for name in projects:
 			project_item = QTreeWidgetItem(self.projectTree)
 			project_widget = util.ItemTreeProject(text=name)
@@ -406,13 +410,20 @@ class SceneManagerUI(QDialog):
 			project_item.setSizeHint(0, project_size)
 			
 			self.projectTree.setItemWidget(project_item, 0, project_widget)
+			self.project_dataItem[str(project_item)] = {'name': name}
 
+			if name == '_other':
+				itemSelect = project_item
 
-		self.projectTree.clearSelection()
+		if itemSelect:
+			itemSelect.setSelected(True)
+			self.projectTree.setCurrentItem(itemSelect)
+			self.projectTree.scrollTo(self.projectTree.indexFromItem(itemSelect))
 
 	def showListDcc(self):
 
 		self.dccList.clear()
+		self.dcc_dataItem = {}
 
 		dcc = func.get_dcc()
 		sorted_dcc = sorted(dcc, key= lambda x: x['name'])
@@ -425,13 +436,31 @@ class SceneManagerUI(QDialog):
 			item.setToolTip(data['name'])
 
 			self.dccList.addItem(item)
+			self.dcc_dataItem[str(item)] = copy.deepcopy(data)
 
 	def doRefreshDcc(self):
 
 		self.dcc = func.create_db_program(clear=True)
 		self.showListDcc()
 
-		
+	def doOpenDcc(self):
+
+		QApplication.setOverrideCursor(Qt.WaitCursor)
+
+		current_item = self.dccList.currentItem()
+
+		if str(current_item) in self.dcc_dataItem.keys():
+
+			path = self.dcc_dataItem[str(current_item)]['path']
+			func.open_dcc(path=path, project=self.project)
+
+		QApplication.restoreOverrideCursor()
+
+	def doClickProject(self):
+
+		project_item = self.projectTree.currentItem()
+		if project_item and str(project_item) in self.project_dataItem.keys():
+				self.project = self.project_dataItem[str(project_item)]['name']
 
 
 

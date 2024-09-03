@@ -184,4 +184,10 @@ def get_dcc():
 
     return result
 
+def open_dcc(path, project=''):
+
+    if os.path.exists(path):
+        os.environ['SAO_PROJECT'] = project
+        command = "import maya.standalone; maya.standalone.initialize(); cmds.file(new=True, force=True); os.environ['SAO_PROJECT'] = {}".format(project)
+        subprocess.Popen([path, '-command', command])
 
