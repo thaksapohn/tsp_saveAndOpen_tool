@@ -103,7 +103,6 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 
 			os.remove(self.db_path)
 
-
 	def insert_file_data(self, filepath='', description='', thumbnail_path='',user='', project='', dcc='', values={}):
 		'''
 		|_filepath			ex. 'T:/rnd/zeafrost/work/shot/101/S01/0020/anm/maya/scenes/zeafrost_101_S01_0020_anm_blocking_v003.ma'
@@ -128,7 +127,7 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		else:
 			self.create(
 				path=self.db_path, 
-				fields=['id', 'filename', 'description', 'create_at', 'update_at', 'user', 'path', 'thumbnail_path'], 
+				fields=['id', 'filename', 'description', 'create_at', 'update_at', 'user', 'path', 'thumbnail_path',  'project', 'dcc'], 
 				table='files_data')
 
 		# parse id
@@ -173,6 +172,13 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		self.insert(table='files_data', values=values)
 		self.close_connection()
 
+		self.insert_recent_data(
+			filepath=filepath, 
+			description=description, 
+			project=project, 
+			dcc=dcc, 
+			date=date_at)
+
 	def update_file_data(self, filters={}, values={}):
 		"""
 		The function `update_file_data` updates data in a database table based on specified filters and
@@ -203,17 +209,17 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 		else:
 			self.create(
 				path=self.db_path, 
-				fields=['id', 'filename', 'description', 'create_at', 'update_at', 'user', 'path', 'thumbnail_path'], 
+				fields=['id', 'filename', 'description', 'create_at', 'update_at', 'user', 'path', 'thumbnail_path',  'project', 'dcc'], 
 				table='files_data')
 
 		# parse filters
 		#--------------
 		filters_parse = self.parse_data(data=filters)
-		valuse_parse = self.parse_data(data=values)
+		values_parse = self.parse_data(data=values)
 
 		self.update(
 			table='files_data',
-			values=valuse_parse,
+			values=values_parse,
 			filters=filters_parse)
 
 		self.close_connection()
@@ -271,5 +277,72 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 			self.delete(filters=filters_parse, table='files_data')
 			
 
+	def insert_recent_data(self, filepath='', description='', project='', dcc='', date='', values={}):
 
+		# check table
+		#------------
+		self.connect(self.db_path)
+		check_exists = self.check_exist_table(table='recent_data')
 
+		if not check_exists:
+			
+			self.create(
+				path=self.db_path, 
+				fields=['id', 'filename', 'description', 'create_at', 'project', 'dcc', 'path'], 
+				table='recent_data')
+
+		self.connect(self.db_path)
+
+		# parse id
+		#---------
+		rows = self.search(filters={}, table='recent_data')
+		id_data = 1
+		
+		if rows:
+			last_row = rows[-1]
+			last_id = last_row[0]
+			id_data = int(last_id) + 1
+
+		if not date:
+			# parse date
+			#-----------
+			date = datetime.now()
+
+		# insert row 
+		#-----------
+		if values:
+			if not values.get('id'):
+				values['id'] = id_data
+
+			if not values.get('create_at'):
+				values['create_at'] = date
+
+		else:
+			values = {
+				'id': id_data,
+				'filename' : os.path.basename(filepath),
+				'description': description,
+				'create_at': date,
+				'path': filepath,
+				'project': project,
+				'dcc': dcc}
+
+		# self.close_connection()
+		
+		self.insert(table='recent_data', values=values)
+
+	def search_recent_data(self, filters={}):
+
+		result = []
+		
+		self.db_path = self.db_path.format(temp_path=TEMP_PATH)
+
+		if os.path.exists(self.db_path):
+			self.connect(path=self.db_path)
+		
+			filters_parse = self.parse_data(data=filters)
+
+			result = self.search(filters=filters_parse, table='recent_data')
+			self.close_connection()
+
+		return result

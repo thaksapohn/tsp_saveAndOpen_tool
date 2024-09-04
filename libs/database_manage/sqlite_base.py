@@ -205,4 +205,11 @@ class SQLITE_BASE(object):
 				self.cursor.execute(where_txt, data)
 				self.connection.commit()
 
+	def check_exist_table(self, table=''):
 
+		self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=? ", (table,))
+		check_exists = self.cursor.fetchone()
+
+		self.cursor = self.connection.cursor()
+
+		return check_exists

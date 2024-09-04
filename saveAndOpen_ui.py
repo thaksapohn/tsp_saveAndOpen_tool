@@ -59,6 +59,7 @@ class SceneManagerUI(QDialog):
 		self.setContentsMargins(0,0,0,0)
 
 		self.dcc = func.create_db_program()
+		self.cur_dcc = DCC
 		self.ext = ext
 		self.dcc_dataItem = {}
 		self.project_dataItem = {}
@@ -82,6 +83,7 @@ class SceneManagerUI(QDialog):
 
 		self.showLookInPath()
 		self.showFileItems()
+		self.showRecentFile()
 		
 
 	def mousePressEvent(self,event):
@@ -212,7 +214,7 @@ class SceneManagerUI(QDialog):
 		recentLayout.setAlignment(Qt.AlignTop)
 		recentLayout.setContentsMargins(20, 0, 10, 10)
 		recentWidget = QDialog()
-		recentWidget.setFixedWidth(350)
+		recentWidget.setMinimumWidth(350)
 		recentWidget.setLayout(recentLayout)
 		self.bodyLayout.addWidget(recentWidget)
 
@@ -242,9 +244,17 @@ class SceneManagerUI(QDialog):
 		self.recentTree.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
 		self.recentTree.setAutoScroll(False)
 		self.recentTree.setContextMenuPolicy(Qt.CustomContextMenu)
-		self.recentTree.setHeaderLabels(['name', 'date', 'location'])
+		self.recentTree.setHeaderLabels(['name', 'date', 'comment', 'location'])
 		self.recentTree.setColumnWidth(0, 225)
 		self.recentTree.setColumnWidth(1, 95)
+		self.recentTree.setColumnWidth(2, 70)
+
+
+		# command for sort tree item
+		#---------------------------
+		self.recentTree.sortByColumn(4,Qt.AscendingOrder)
+		self.recentTree.setSortingEnabled(True)
+		self.recentTree.header().setSortIndicatorShown(False)
 
 	def initFileWidget(self):
 
@@ -299,6 +309,7 @@ class SceneManagerUI(QDialog):
 		self.fileTree = QTreeWidget()
 		locationLayout.addWidget(self.fileTree)
 		self.fileTree.itemDoubleClicked.connect(self.doDoubleClickFile)
+		self.fileTree.itemClicked.connect(self.doClickFile)
 		self.fileTree.setStyleSheet('padding-left: 5px; border: 0px;')
 		self.fileTree.setStyleSheet(self.css_main)
 		self.fileTree.setRootIsDecorated(False)
@@ -320,24 +331,47 @@ class SceneManagerUI(QDialog):
 		fileScrollbar = QScrollBar()
 		self.fileTree.setVerticalScrollBar(fileScrollbar)
 
-		name_label = QLabel('Name :')
-		locationLayout.addWidget(name_label)
+		manage_file_layout = QHBoxLayout()
+		manage_file_layout.setContentsMargins(0,0,0,0)
+		manage_file_widget = QDialog()
+		manage_file_widget.setLayout(manage_file_layout)
+		manage_file_widget.setFixedHeight(120)
+		locationLayout.addWidget(manage_file_widget)
 
-		name_layout = QHBoxLayout()
-		locationLayout.addLayout(name_layout)
+		detail_layout = QVBoxLayout()
+		manage_file_layout.addLayout(detail_layout)
+
+		name_label = QLabel('Name :')
+		detail_layout.addWidget(name_label)
 
 		self.name_edit = QLineEdit()
 		self.name_edit.setFixedHeight(25)
 		self.name_edit.setStyleSheet('QLineEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
-		name_layout.addWidget(self.name_edit)
+		detail_layout.addWidget(self.name_edit)
 
+		comment_label = QLabel('comment :')
+		detail_layout.addWidget(comment_label)
+
+		self.comment_edit = QTextEdit()
+		self.comment_edit.setFixedHeight(40)
+		self.comment_edit.setStyleSheet('QTextEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
+		detail_layout.addWidget(self.comment_edit)
+
+		action_file_layout = QVBoxLayout()
+		action_file_layout.setAlignment(Qt.AlignCenter)
+		action_file_layout.setContentsMargins(20,40,10,10)
+		action_file_widget = QDialog()
+		action_file_widget.setLayout(action_file_layout)
+		manage_file_layout.addWidget(action_file_widget)
+		
 		self.saveBtn = QPushButton('Save')
-		self.saveBtn.setFixedSize(100, 25)
-		name_layout.addWidget(self.saveBtn)
+		self.saveBtn.clicked.connect(self.doSaveScene)
+		self.saveBtn.setFixedSize(150, 30)
+		action_file_layout.addWidget(self.saveBtn)
 
 		self.openBtn = QPushButton('Open')
-		self.openBtn.setFixedSize(100, 25)
-		name_layout.addWidget(self.openBtn)
+		self.openBtn.setFixedSize(150, 30)
+		action_file_layout.addWidget(self.openBtn)
 
 	def initBottomWidget(self):
 
@@ -499,6 +533,8 @@ class SceneManagerUI(QDialog):
 		project_item = self.projectTree.currentItem()
 		if project_item and str(project_item) in self.project_dataItem.keys():
 				self.project = self.project_dataItem[str(project_item)]['name']
+				self.showLookInPath()
+				self.showFileItems()
 
 	def showFileItems(self):
 
@@ -549,11 +585,15 @@ class SceneManagerUI(QDialog):
 				elif path.endswith('.hip') or path.endswith('.hiplc') or path.endswith('.hipnc'):
 					item.setIcon(0, QIcon('{}/icons/houdini.png'.format(MODULE_PATH)))
 
+				elif path.endswith('.hip') or path.endswith('.blend'):
+					item.setIcon(0, QIcon('{}/icons/blender.png'.format(MODULE_PATH)))
+
 				else:
 					item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
 
 				item.setText(1,data_file['date'])
 				item.setText(2,data_file['owner'])
+				item.setText(3,data_file['comment'])
 
 			if path.endswith('/'):
 				item.setText(0, path)
@@ -602,9 +642,65 @@ class SceneManagerUI(QDialog):
 			path = self.project_data[project]['path']
 			self.pathBox.setText(path)
 
+	def doSaveScene(self):
 
+		dirpath = self.pathBox.text()
+		name = self.name_edit.text()
+		comment = self.comment_edit.toPlainText()
 
+		if dirpath and name:
+			if '.' in name:
+				fullpath = '{}/{}'.format(dirpath, name)
+				func.save_scene(
+					path=fullpath,
+					dcc=self.cur_dcc,
+					project=self.project,
+					comment=comment)
 
+		self.close()
+
+	def doClickFile(self):
+
+		item = self.fileTree.currentItem()
+		name = item.text(0)
+
+		if '.' in name:
+			self.name_edit.setText(name)
+
+	def showRecentFile(self):
+		
+		recent_files = func.get_recent_file()
+		recent_files.reverse()
+
+		for data in recent_files[:10]:
+
+			item = QTreeWidgetItem(self.recentTree)
+			self.recentTree.addTopLevelItem(item)
+
+			if data['name'].endswith('.ma'):
+				item.setIcon(0, QIcon('{}/icons/ma_file.png'.format(MODULE_PATH)))
+
+			elif data['name'].endswith('.mb'):
+				item.setIcon(0, QIcon('{}/icons/mb_file.png'.format(MODULE_PATH)))
+				
+			elif data['name'].endswith('.hip') or data['name'].endswith('.hiplc') or data['name'].endswith('.hipnc'):
+				item.setIcon(0, QIcon('{}/icons/houdini.png'.format(MODULE_PATH)))
+
+			elif data['name'].endswith('.hip') or data['name'].endswith('.blend'):
+				item.setIcon(0, QIcon('{}/icons/blender.png'.format(MODULE_PATH)))
+
+			else:
+				item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
+
+			date = data['date'].rpartition('.')[0]
+			date = date.replace('-', '/')
+			date = date.rpartition(':')[0]
+
+			item.setText(0, data['name'])
+			item.setText(1, date)
+			item.setText(2, data['comment'])
+			item.setText(3, data['path'])
+			
 
 
 
@@ -648,7 +744,7 @@ def main(state='open'):
 
 	else:
 		app = QApplication(sys.argv)
-		ui = SceneManagerUI(ext=['ma', 'mb', 'hiplc', 'hip', 'hipnc'])
+		ui = SceneManagerUI(ext=['ma', 'mb', 'hiplc', 'hip', 'hipnc', 'blend'])
 		ui.show()
 		sys.exit(app.exec_())
 

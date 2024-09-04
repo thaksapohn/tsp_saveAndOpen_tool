@@ -5,6 +5,7 @@ import subprocess
 import re
 import datetime
 import math
+import getpass
 from pprint import pprint
 from datetime import datetime
 
@@ -24,9 +25,13 @@ import libs.database_manage.sqlite_project as db_project
 reload(db_project)
 import libs.database_manage.sqlite_program as db_program
 reload(db_program)
+import libs.database_manage.sqlite_file as db_file
+reload(db_file)
 
 import getOwnerFile
 reload(getOwnerFile)
+
+USER = getpass.getuser().lower()
 
 def create_project(name='', path=''):
 
@@ -218,7 +223,12 @@ def get_data_file(path=''):
 	data = {
 			'name': os.path.basename(path),
 			'full_path': path,
-			'comment':''}
+			'comment':'',
+			'date': '',
+			'size': '',
+			'owner': '',
+			'permission':'',
+			'thumbnail': ''}
 
 	#---------------
 	# DATE
@@ -259,24 +269,82 @@ def get_data_file(path=''):
 
 	data['permission'] = permission_text
 
-	# #---------------
-	# # COMMENT AND THUMBNAIL
-	# sqFile = sqlite_file.SQLITE_FILE_DB(project=PROJ_CODE)
-	# result_file = sqFile.search_file_data(
-	# 	project=PROJ_CODE,
-	# 	ep=ep, 
-	# 	seq=seq, 
-	# 	shot=shot, 
-	# 	asset=asset, 
-	# 	asset_type=asset_type, 
-	# 	step=step, 
-	# 	filters={'filepath': path})
+	#---------------
+	# COMMENT AND THUMBNAIL
+	sqFile = db_file.SQLITE_FILE_DB()
+	result_file = sqFile.search_file_data(filters={'filepath': path})
 
-	# if result_file:
-	# 	comment = result_file[-1][2] # index [2] is description
-	# 	thumbnail = result_file[-1][-1] # index [7] is thumbnail path
-	# 	data['comment'] = comment
-	# 	data['thumbnail'] = thumbnail
+	if result_file:
+		comment = result_file[-1][2] # index [2] is description
+		thumbnail = result_file[-1][-1] # index [7] is thumbnail path
+		data['comment'] = comment
+		data['thumbnail'] = thumbnail
 
 	# pprint(data)
 	return data
+	
+def save_scene(path, dcc, project, comment=''):
+	db = db_file.SQLITE_FILE_DB()
+	
+	if dcc == 'maya':
+
+		import maya.cmds as mc
+
+		mc.file(rename=path)
+		mc.file(save=True)
+
+
+	result_search = db.search_file_data(filters={'filepath':path})
+	if result_search:
+		values = {'comment':comment}
+		db.update_file_data(filters={'filepath':path}, values=values)
+		db.insert_recent_data(
+			filepath=path, 
+			description=comment, 
+			project=project, 
+			dcc=dcc)
+	else:
+		db.insert_file_data(
+			filepath=path,
+			description=comment,
+			dcc=dcc,
+			project=project,
+			user = USER)
+
+def get_recent_file():
+	
+	result = []
+
+	db = db_file.SQLITE_FILE_DB()
+	data_files = db.search_recent_data()
+	index = 0
+
+	path_check = {}
+
+	for data in data_files:
+
+		# pprint(data)
+		parse_data = {}
+
+		parse_data['id'] = data[0]
+		parse_data['name'] = data[1]
+		parse_data['comment'] = data[2]
+		parse_data['date'] = data[3]
+		parse_data['project'] = data[4]
+		parse_data['dcc'] = data[5]
+		parse_data['path'] = data[6]
+
+		if data[6] in path_check.keys():
+			del_index = path_check[data[6]]
+			del result[del_index]
+
+		path_check[data[6]] = index
+		result.append(parse_data)
+
+		index += 1
+
+
+
+	return result
+
+
