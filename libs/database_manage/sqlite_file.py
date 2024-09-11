@@ -326,10 +326,9 @@ class SQLITE_FILE_DB(sqlite_base.SQLITE_BASE):
 				'path': filepath,
 				'project': project,
 				'dcc': dcc}
-
-		# self.close_connection()
 		
 		self.insert(table='recent_data', values=values)
+		# self.close_connection()
 
 	def search_recent_data(self, filters={}):
 

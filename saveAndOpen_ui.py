@@ -7,6 +7,7 @@ import time
 import platform
 import logging
 import copy
+from datetime import datetime
 from pprint import pprint
 
 from PySide2.QtCore import *
@@ -31,6 +32,9 @@ import utilityDialog as util
 reload(util)
 
 DCC = os.getenv("SAO_DCC") or ''
+if not DCC:
+	DCC = func.get_cur_dcc()
+
 PROJECT = os.getenv("SAO_PROJECT") or ''
 CSS_PATH =  '{}/saveAndOpenTool_style.css'.format(MODULE_PATH)
 EXT_FILE = []
@@ -236,6 +240,7 @@ class SceneManagerUI(QDialog):
 		recentTitleLayout.addWidget(self.recentSearch)
 
 		self.recentTree = QTreeWidget()
+		self.recentTree.itemDoubleClicked.connect(self.doDoubleClickRecent)
 		self.recentTree.setStyleSheet('padding-left: 5px; border: 0px;')
 		recentLayout.addWidget(self.recentTree)
 		self.recentTree.setStyleSheet(self.css_main)
@@ -370,6 +375,7 @@ class SceneManagerUI(QDialog):
 		action_file_layout.addWidget(self.saveBtn)
 
 		self.openBtn = QPushButton('Open')
+		self.openBtn.clicked.connect(self.doClickOpenScene)
 		self.openBtn.setFixedSize(150, 30)
 		action_file_layout.addWidget(self.openBtn)
 
@@ -619,6 +625,8 @@ class SceneManagerUI(QDialog):
 		if os.path.isdir(fullpath):
 			self.pathBox.setText(fullpath)
 			self.showFileItems()
+		else:
+			self.doClickOpenScene()
 
 	def doBackFile(self):
 
@@ -701,6 +709,59 @@ class SceneManagerUI(QDialog):
 			item.setText(2, data['comment'])
 			item.setText(3, data['path'])
 			
+	def doClickOpenScene(self):
+
+		dir_path = self.pathBox.text()
+		item = self.fileTree.currentItem()
+		name = item.text(0)
+		path_program = ''
+
+		if name:
+
+			if dir_path.endswith('/'):
+				fullPath = '{}{}'.format(dir_path, name)
+			else:
+				fullPath = '{}/{}'.format(dir_path, name)
+
+			if os.path.exists(fullPath):
+
+				if self.dcc_dataItem:
+					item_dcc = self.dccList.currentItem()
+					if item_dcc:
+						data = self.dcc_dataItem[str(item_dcc)]
+						path_program = data.get('path')
+
+				func.open_scene(path=fullPath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
+				
+			time.sleep(1)
+			QApplication.restoreOverrideCursor()
+
+			if path_program:
+				self.close()
+
+	def doDoubleClickRecent(self):
+
+		QApplication.setOverrideCursor(Qt.WaitCursor)
+
+		item = self.recentTree.currentItem()
+		fullpath = item.text(3)
+		path_program = ''
+
+		if os.path.exists(fullpath):
+
+			if self.dcc_dataItem:
+				item_dcc = self.dccList.currentItem()
+				if item_dcc:
+					data = self.dcc_dataItem[str(item_dcc)]
+					path_program = data.get('path')
+
+			func.open_scene(path=fullpath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
+
+		time.sleep(1)
+		QApplication.restoreOverrideCursor()
+		
+		if path_program:
+				self.close()
 
 
 
@@ -730,8 +791,6 @@ def main(state='open'):
 		maya_ui = SceneManagerUI(parent=prt, ext=['ma', 'mb'], project=PROJECT)
 		maya_ui.show()
 		
-
-
 	elif DCC == 'houdini':
 
 		import hou

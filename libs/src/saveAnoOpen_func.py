@@ -204,10 +204,17 @@ def get_dcc():
 def open_dcc(path, project='', dcc=''):
 
 	if os.path.exists(path):
+
 		os.environ['SAO_PROJECT'] = project
 		os.environ['SAO_DCC'] = dcc
-		command = "import maya.standalone; maya.standalone.initialize(); cmds.file(new=True, force=True); os.environ['SAO_PROJECT'] = {}".format(project)
-		subprocess.Popen([path, '-command', command])
+
+		command = ''
+
+		if dcc == 'maya':
+			command = "import maya.standalone; maya.standalone.initialize(); cmds.file(new=True, force=True); os.environ['SAO_PROJECT'] = {}".format(project)
+		
+		if command:
+			subprocess.Popen([path, '-command', command])
 
 def get_path_default(project):
 
@@ -337,14 +344,64 @@ def get_recent_file():
 		if data[6] in path_check.keys():
 			del_index = path_check[data[6]]
 			del result[del_index]
+			index -= 1 
 
 		path_check[data[6]] = index
 		result.append(parse_data)
 
 		index += 1
 
-
-
 	return result
 
+def get_cur_dcc():
+	dcc = ''
 
+	if sys.argv[0].endswith('maya.exe'):
+		dcc = 'maya'
+
+	elif sys.argv[0].endswith('houdini.exe'):
+		dcc = 'houdini'
+
+	if sys.argv[0].endswith('blender.exe'):
+		dcc = 'blender'
+
+	return dcc
+
+def open_scene(path, dcc, project, path_program = ''):
+	
+	if dcc == 'maya':
+
+		import maya.mel as mel
+
+		typeFile = 'mayaAscii'
+
+		if path.endswith('.mb'): 
+			typeFile = 'mayaBinary'
+
+		cmd = 'file -f -options "v=0;" -ignoreVersion -typ "{}" -pmt 0 -esn false -o "'.format(typeFile) + path + '" ;'
+			
+		try: mel.eval(cmd)
+		except: pass
+
+	else:
+		if path_program:
+
+			if path.endswith('.ma') or path.endswith('.ma'):
+				subprocess.Popen([path_program, '-file', path])
+
+		else:
+			print(':: TOOL MASSAGE :: Please Select Program')
+
+
+	
+	# record recent file
+	#-------------------
+	db = db_file.SQLITE_FILE_DB()
+	date = datetime.now()
+
+	db.insert_recent_data(
+		filepath=path, 
+		description='open file', 
+		project=project , 
+		dcc=dcc, 
+		date=date )
