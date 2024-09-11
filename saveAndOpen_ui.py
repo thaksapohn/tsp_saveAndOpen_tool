@@ -31,9 +31,7 @@ reload(func)
 import utilityDialog as util
 reload(util)
 
-DCC = os.getenv("SAO_DCC") or ''
-if not DCC:
-	DCC = func.get_cur_dcc()
+DCC = func.get_cur_dcc()
 
 PROJECT = os.getenv("SAO_PROJECT") or ''
 CSS_PATH =  '{}/saveAndOpenTool_style.css'.format(MODULE_PATH)
@@ -715,6 +713,7 @@ class SceneManagerUI(QDialog):
 		item = self.fileTree.currentItem()
 		name = item.text(0)
 		path_program = ''
+		check_open = False
 
 		if name:
 
@@ -731,12 +730,12 @@ class SceneManagerUI(QDialog):
 						data = self.dcc_dataItem[str(item_dcc)]
 						path_program = data.get('path')
 
-				func.open_scene(path=fullPath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
+				check_open = func.open_scene(path=fullPath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
 				
 			time.sleep(1)
 			QApplication.restoreOverrideCursor()
 
-			if path_program:
+			if check_open:
 				self.close()
 
 	def doDoubleClickRecent(self):
@@ -746,6 +745,7 @@ class SceneManagerUI(QDialog):
 		item = self.recentTree.currentItem()
 		fullpath = item.text(3)
 		path_program = ''
+		check_open = False
 
 		if os.path.exists(fullpath):
 
@@ -755,20 +755,20 @@ class SceneManagerUI(QDialog):
 					data = self.dcc_dataItem[str(item_dcc)]
 					path_program = data.get('path')
 
-			func.open_scene(path=fullpath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
+			check_open = func.open_scene(path=fullpath, dcc=self.cur_dcc, project=self.project, path_program=path_program)
 
 		time.sleep(1)
 		QApplication.restoreOverrideCursor()
 		
-		if path_program:
-				self.close()
+		if check_open:
+			self.close()
 
 
 
 # ------------------------------------------- #
 #               RUN TOOL FUNC                 #
 # ------------------------------------------- #
-def main(state='open'):
+def main():
 
 	startTime = time.time()
 
@@ -796,7 +796,7 @@ def main(state='open'):
 		import hou
 
 		temp = hou.ui.mainQtWindow()
-		temp.setStyleSheet('background:none;')
+		# temp.setStyleSheet('background:none;')
 		
 		houdini_ui = SceneManagerUI(parent=temp, ext=['hiplc', 'hip', 'hipnc'], project=PROJECT)
 		houdini_ui.show()

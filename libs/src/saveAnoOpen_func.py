@@ -212,9 +212,11 @@ def open_dcc(path, project='', dcc=''):
 
 		if dcc == 'maya':
 			command = "import maya.standalone; maya.standalone.initialize(); cmds.file(new=True, force=True); os.environ['SAO_PROJECT'] = {}".format(project)
-		
-		if command:
 			subprocess.Popen([path, '-command', command])
+
+		if dcc == 'houdini':
+			subprocess.Popen([path])
+			
 
 def get_path_default(project):
 
@@ -300,6 +302,13 @@ def save_scene(path, dcc, project, comment=''):
 		mc.file(rename=path)
 		mc.file(save=True)
 
+	elif dcc == 'houdini':
+
+		import hou
+		
+		hou.hipFile.setName(path)
+		hou.hipFile.save(save_to_recent_files=False)
+
 
 	result_search = db.search_file_data(filters={'filepath':path})
 	if result_search:
@@ -354,20 +363,22 @@ def get_recent_file():
 	return result
 
 def get_cur_dcc():
+
 	dcc = ''
+	programs = ['maya.exe', 'houdini.exe', 'blender.exe']
 
-	if sys.argv[0].endswith('maya.exe'):
-		dcc = 'maya'
-
-	elif sys.argv[0].endswith('houdini.exe'):
-		dcc = 'houdini'
-
-	if sys.argv[0].endswith('blender.exe'):
-		dcc = 'blender'
+	for program in programs:
+		cmd = 'tasklist /fi "imagename eq {}"'.format(program)
+		output = subprocess.check_output(cmd, shell= True).decode()
+		if program.lower() in output.lower():
+			dcc = program.rpartition('.')[0]
+			break
 
 	return dcc
 
 def open_scene(path, dcc, project, path_program = ''):
+
+	check_open = False
 	
 	if dcc == 'maya':
 
@@ -380,8 +391,17 @@ def open_scene(path, dcc, project, path_program = ''):
 
 		cmd = 'file -f -options "v=0;" -ignoreVersion -typ "{}" -pmt 0 -esn false -o "'.format(typeFile) + path + '" ;'
 			
-		try: mel.eval(cmd)
+		try: 
+			mel.eval(cmd)
+			check_open = True
 		except: pass
+
+	elif dcc == 'houdini':
+
+		import hou
+
+		hou.hipFile.load(path, suppress_save_prompt=False)
+		check_open = True
 
 	else:
 		if path_program:
@@ -389,8 +409,13 @@ def open_scene(path, dcc, project, path_program = ''):
 			if path.endswith('.ma') or path.endswith('.ma'):
 				subprocess.Popen([path_program, '-file', path])
 
+			elif path.endswith('.hip') or path.endswith('.hiplc') or path.endswith('.hipnc'):
+				subprocess.Popen([path_program, path])
+
 		else:
 			print(':: TOOL MASSAGE :: Please Select Program')
+
+	return check_open
 
 
 	
