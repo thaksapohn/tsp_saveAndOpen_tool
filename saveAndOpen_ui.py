@@ -26,7 +26,7 @@ for path in PATHS:
 	if not path in sys.path:
 		sys.path.append(path)
 
-import libs.src.saveAnoOpen_func as func
+import libs.src.saveAndOpen_func as func
 reload(func)
 import utilityDialog as util
 reload(util)
@@ -249,8 +249,8 @@ class SceneManagerUI(QDialog):
 		recentTitleLayout.addWidget(recentLabel)
 
 		self.recentSearch = util.SearchBoxWidget()
-		# self.recentSearch.line.textChanged.connect(self.inputrecentSearch)
-		# self.recentSearch.searchBtn.clicked.connect(self.inputrecentSearch)
+		self.recentSearch.line.textChanged.connect(self.doSearchRecent)
+		self.recentSearch.search_btn.clicked.connect(self.doSearchRecent)
 		self.recentSearch.setStyleSheet('''
 			border-radius: 0px;  border-bottom: 2px solid rgba(70, 70, 70, 100); background: rgba(40,40,40,100)''')
 		self.recentSearch.setFixedSize(180, 22)
@@ -258,6 +258,7 @@ class SceneManagerUI(QDialog):
 
 		self.recentTree = QTreeWidget()
 		self.recentTree.itemDoubleClicked.connect(self.doDoubleClickRecent)
+		self.recentTree.itemClicked.connect(self.doClickRecent)
 		self.recentTree.setStyleSheet('padding-left: 5px; border: 0px;')
 		recentLayout.addWidget(self.recentTree)
 		self.recentTree.setStyleSheet(self.css_main)
@@ -299,8 +300,8 @@ class SceneManagerUI(QDialog):
 		locationTitleLayout.addWidget(locationLabel)
 
 		self.fileSearch = util.SearchBoxWidget()
-		# self.fileSearch.line.textChanged.connect(self.inputFileSearch)
-		# self.fileSearch.searchBtn.clicked.connect(self.inputFileSearch)
+		self.fileSearch.line.textChanged.connect(self.doSearchFile)
+		self.fileSearch.search_btn.clicked.connect(self.doSearchFile)
 		self.fileSearch.setStyleSheet('''
 			border-radius: 0px;  border-bottom: 2px solid rgba(70, 70, 70, 100); background: rgba(40,40,40,100)''')
 		self.fileSearch.setFixedSize(180, 22)
@@ -389,7 +390,9 @@ class SceneManagerUI(QDialog):
 		self.saveBtn = QPushButton('Save')
 		self.saveBtn.clicked.connect(self.doSaveScene)
 		self.saveBtn.setFixedSize(150, 30)
-		action_file_layout.addWidget(self.saveBtn)
+
+		if DCC:
+			action_file_layout.addWidget(self.saveBtn)
 
 		self.openBtn = QPushButton('Open')
 		self.openBtn.clicked.connect(self.doClickOpenScene)
@@ -432,6 +435,7 @@ class SceneManagerUI(QDialog):
 		self.dccList.setIconSize(QSize(142.4, 80))
 		self.dccList.setSpacing(15)
 		self.dccList.itemDoubleClicked.connect(self.doOpenDcc)
+		self.dccList.itemClicked.connect(self.doClickDCC)
 		self.bottomLayout.addWidget(self.dccList)
 
 	def showAddProject(self):
@@ -575,12 +579,13 @@ class SceneManagerUI(QDialog):
 			if os.path.exists(path):
 				for item in os.listdir(path):
 					fullpath = '{}/{}'.format(path, item)
-					if '.' in item:
-						ext = item.rpartition('.')[-1]
-						if ext in self.ext:
-							files_path.append(fullpath)
-					else:
-						folders_path.append(fullpath)
+					if not item == '__pycache__':
+						if '.' in item:
+							ext = item.rpartition('.')[-1]
+							if ext in self.ext:
+								files_path.append(fullpath)
+						else:
+							folders_path.append(fullpath)
 
 		else:
 			folders_path = ["{}:/".format(d) for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
@@ -696,9 +701,11 @@ class SceneManagerUI(QDialog):
 
 		item = self.fileTree.currentItem()
 		name = item.text(0)
+		comment = item.text(3)
 
 		if '.' in name:
 			self.name_edit.setText(name)
+			self.comment_edit.setText(comment)
 
 	def showRecentFile(self):
 		
@@ -792,6 +799,97 @@ class SceneManagerUI(QDialog):
 		if check_open:
 			self.close()
 
+	def doClickRecent(self):
+
+		item = self.recentTree.currentItem()
+		path = item.text(3)
+		dirpath = os.path.dirname(path)
+
+		if os.path.exists(dirpath):
+			self.pathBox.setText(dirpath)
+			self.showFileItems()
+
+	def doSearchRecent(self):
+
+		search_txt = self.recentSearch.line.text().lower()
+
+		for i in range(self.recentTree.topLevelItemCount()):
+			item = self.recentTree.topLevelItem(i)
+			name = item.text(0).lower()
+
+			if search_txt in name:
+				item.setHidden(False)
+
+			else:
+				item.setHidden(True)
+
+	def doSearchFile(self):
+
+		search_txt = self.fileSearch.line.text().lower()
+
+		for i in range(self.fileTree.topLevelItemCount()):
+			item = self.fileTree.topLevelItem(i)
+			name = item.text(0).lower()
+
+			if search_txt in name:
+				item.setHidden(False)
+
+			else:
+				item.setHidden(True)
+
+	def doClickDCC(self):
+
+		current_item = self.dccList.currentItem()
+
+		if str(current_item) in self.dcc_dataItem.keys():
+
+			dcc = self.dcc_dataItem[str(current_item)]['shortname']
+			ext = []
+
+			if dcc == 'maya':
+				ext = ['ma', 'mb']
+
+			elif dcc == 'houdini':
+				ext = ['hiplc', 'hip', 'hipnc']
+
+			elif dcc == 'blender':
+				ext = ['blend']
+
+			if ext:
+
+				for i in range(self.fileTree.topLevelItemCount()):
+					item = self.fileTree.topLevelItem(i)
+					name = item.text(0).lower()
+
+					if '.' in name:
+						search_txt = name.rpartition('.')[-1]
+
+						if search_txt in ext:
+							item.setHidden(False)
+						else:
+							item.setHidden(True)
+
+				for i in range(self.recentTree.topLevelItemCount()):
+					item = self.recentTree.topLevelItem(i)
+					name = item.text(0).lower()
+
+					if '.' in name:
+						search_txt = name.rpartition('.')[-1]
+
+						if search_txt in ext:
+							item.setHidden(False)
+						else:
+							item.setHidden(True)
+
+
+
+
+
+
+
+
+
+
 
 
 # ------------------------------------------- #
@@ -825,7 +923,6 @@ def main():
 		import hou
 
 		temp = hou.ui.mainQtWindow()
-		# temp.setStyleSheet('background:none;')
 		
 		houdini_ui = SceneManagerUI(parent=temp, ext=['hiplc', 'hip', 'hipnc'], project=PROJECT)
 		houdini_ui.show()

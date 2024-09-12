@@ -21,7 +21,7 @@ if PY_VERSION == 3:
 
 MODULE_PATH = os.path.dirname(__file__).replace('\\','/')
 
-import libs.src.saveAnoOpen_func as func
+import libs.src.saveAndOpen_func as func
 reload(func)
 
 

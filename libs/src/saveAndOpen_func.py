@@ -16,7 +16,7 @@ if PY_VERSION == 3:
 	from importlib import reload
 
 MODULE_PATH = os.path.dirname(__file__).replace('\\', '/')
-PATHS = [ MODULE_PATH ]
+PATHS = [ MODULE_PATH, os.path.dirname(os.path.dirname(MODULE_PATH)) ]
 for path in PATHS:
 	if not path in sys.path:
 		sys.path.append(path)
@@ -370,15 +370,13 @@ def get_recent_file():
 		parse_data['dcc'] = data[5]
 		parse_data['path'] = data[6]
 
-		if data[6] in path_check.keys():
-			del_index = path_check[data[6]]
-			del result[del_index]
-			index -= 1 
+		for index, data_dict in enumerate(result):
+			if data_dict.get('path') == data[6]:
+				del result[index]
+				break
 
-		path_check[data[6]] = index
 		result.append(parse_data)
 
-		index += 1
 
 	return result
 
@@ -387,16 +385,30 @@ def get_cur_dcc():
 	dcc = ''
 	programs = ['maya.exe', 'houdini.exe', 'blender.exe']
 
-	for program in programs:
-		cmd = 'tasklist /fi "imagename eq {}"'.format(program)
-		output = subprocess.check_output(cmd, shell= True).decode()
-		if program.lower() in output.lower():
-			dcc = program.rpartition('.')[0]
-			break
+	if sys.argv[0]:
 
-	if dcc == 'maya':
-		if not sys.argv[0].endswith('maya.exe'):
-			dcc = ''
+		if sys.argv[0].endswith('maya.exe'):
+			dcc == 'maya'
+
+		elif sys.argv[0].endswith('blender.exe'):
+			dcc == 'blender'
+
+	else:
+
+		for program in programs:
+			cmd = 'tasklist /fi "imagename eq {}"'.format(program)
+			output = subprocess.check_output(cmd, shell= True).decode()
+			if program.lower() in output.lower():
+				dcc = program.rpartition('.')[0]
+				break
+
+		if dcc == 'maya':
+			if not sys.argv[0].endswith('maya.exe'):
+				dcc = ''
+
+		elif dcc == 'blender':
+			if not sys.argv[0].endswith('blender.exe'):
+				dcc == ''
 
 	return dcc
 
@@ -465,6 +477,6 @@ def open_scene(path, dcc, project, path_program = ''):
 
 if __name__ == '__main__':
 	
-	data = check_list_project()
-	# pprint(data)
+	data = get_recent_file()
+	pprint(data)
 
