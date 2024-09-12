@@ -125,6 +125,25 @@ class SceneManagerUI(QDialog):
 		titleLayout.addWidget(titleLabel)
 		titleLabel.setStyleSheet('font-size: 18px; margin-left: 10px')
 
+		self.miniBtn = QPushButton('_')
+		self.miniBtn.setFixedSize(30, 30)
+		self.miniBtn.clicked.connect(self.showMinimized)
+		titleLayout.addWidget(self.miniBtn)
+
+		self.miniBtn.setStyleSheet('''
+		QPushButton{
+			background: rgba(0, 0, 0,0);
+			border: none;
+			border-radius: 3px;
+			color: #3b87d3;
+			font-size: 14px
+		}
+		QPushButton:hover{
+			background: #3b87d3;
+			color: rgb(0, 0, 0)
+		}
+		''')
+
 		self.closeBtn = QPushButton('X')
 		self.closeBtn.setFixedSize(30, 30)
 		self.closeBtn.clicked.connect(self.close)
@@ -304,7 +323,7 @@ class SceneManagerUI(QDialog):
 		self.pathBox = QLineEdit()
 		self.pathBox.setText(self.path_lookIn)
 		self.pathBox.setFixedHeight(25)
-		self.pathBox.setStyleSheet('QLineEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
+		self.pathBox.setStyleSheet(self.css_main)
 		browseLayout.addWidget(self.pathBox)
 
 		browseLayout.addWidget(self.backBtn)
@@ -349,7 +368,7 @@ class SceneManagerUI(QDialog):
 
 		self.name_edit = QLineEdit()
 		self.name_edit.setFixedHeight(25)
-		self.name_edit.setStyleSheet('QLineEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
+		self.name_edit.setStyleSheet(self.css_main)
 		detail_layout.addWidget(self.name_edit)
 
 		comment_label = QLabel('comment :')
@@ -357,7 +376,7 @@ class SceneManagerUI(QDialog):
 
 		self.comment_edit = QTextEdit()
 		self.comment_edit.setFixedHeight(40)
-		self.comment_edit.setStyleSheet('QTextEdit{background: rgb(30, 30, 30); border: 2px; border-bottom: 2px solid rgb(60, 60, 60)}')
+		self.comment_edit.setStyleSheet(self.css_main)
 		detail_layout.addWidget(self.comment_edit)
 
 		action_file_layout = QVBoxLayout()
@@ -516,8 +535,12 @@ class SceneManagerUI(QDialog):
 
 	def doRefreshDcc(self):
 
+		QApplication.setOverrideCursor(Qt.WaitCursor)
+
 		self.dcc = func.create_db_program(clear=True)
 		self.showListDcc()
+
+		QApplication.restoreOverrideCursor()
 
 	def doOpenDcc(self):
 
@@ -640,7 +663,11 @@ class SceneManagerUI(QDialog):
 	def showLookInPath(self):
 
 		item = self.projectTree.currentItem()
-		project = item.text(0)
+		project = ''
+
+		if item:
+			project = item.text(0)
+
 		if not project:
 			project = self.project
 
@@ -708,6 +735,8 @@ class SceneManagerUI(QDialog):
 			item.setText(3, data['path'])
 			
 	def doClickOpenScene(self):
+
+		QApplication.setOverrideCursor(Qt.WaitCursor)
 
 		dir_path = self.pathBox.text()
 		item = self.fileTree.currentItem()
@@ -800,6 +829,17 @@ def main():
 		
 		houdini_ui = SceneManagerUI(parent=temp, ext=['hiplc', 'hip', 'hipnc'], project=PROJECT)
 		houdini_ui.show()
+	
+	elif DCC == 'blender':
+
+		app = QApplication.instance()
+
+		if app == None:
+			app = QApplication(sys.argv)
+
+		ui = SceneManagerUI(ext=['blend'], project=PROJECT)
+		ui.exec_()
+
 
 	else:
 		app = QApplication(sys.argv)

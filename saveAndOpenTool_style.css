@@ -135,3 +135,8 @@ QSplitter:handle{
     margin-bottom:25px; 
     min-width: 2px; 
     max-width: 2px}
+QLineEdit{
+    color: rgb(190, 190, 190);
+    background: rgb(30, 30, 30); 
+    border: 2px; 
+    border-bottom: 2px solid rgb(60, 60, 60)}

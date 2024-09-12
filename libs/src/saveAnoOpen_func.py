@@ -111,6 +111,8 @@ def create_db_program(clear=False):
 
 def check_list_project():
 
+	print(':: TOOL MASSAGE :: list program process...')
+
 	maya_list = []
 	houdini_list = []
 	blender_list = []
@@ -124,6 +126,7 @@ def check_list_project():
 	# Execute the command and decode the output
 	#------------------------------------------
 	output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
+	path_install = ''
 	
 	# Parse the output
 	#-----------------
@@ -133,6 +136,10 @@ def check_list_project():
 
 		if "DisplayName" in line:
 			display_name = line.split("    ")[-1].strip()
+
+		if 'InstallLocation' in line:
+			path_install = line.split("    ")[-1]
+
 		
 		if display_name:
 			data = {}
@@ -164,11 +171,15 @@ def check_list_project():
 
 				if not display_name in blender_list:
 
+					if 'blender' in path_install.lower():
+						display_name = os.path.basename(os.path.dirname(path_install))
+
 					blender_list.append(display_name)
 					ver = ''
 					
 					if re.findall('([0-9])', display_name):
 						ver = display_name.split(' ')[-1]
+
 					path = get_program_path('blender', ver)
 
 					if path:
@@ -214,10 +225,12 @@ def open_dcc(path, project='', dcc=''):
 			command = "import maya.standalone; maya.standalone.initialize(); cmds.file(new=True, force=True); os.environ['SAO_PROJECT'] = {}".format(project)
 			subprocess.Popen([path, '-command', command])
 
-		if dcc == 'houdini':
+		elif dcc == 'houdini':
 			subprocess.Popen([path])
-			
 
+		elif dcc == 'blender':
+			subprocess.Popen([path, '--factory-startup'])
+			
 def get_path_default(project):
 
 	pathReturn = ''
@@ -309,6 +322,13 @@ def save_scene(path, dcc, project, comment=''):
 		hou.hipFile.setName(path)
 		hou.hipFile.save(save_to_recent_files=False)
 
+	elif dcc == 'blender':
+
+		import bpy
+		bpy.ops.wm.save_as_mainfile(filepath=path)
+
+	if project:
+		os.environ['SAO_PROJECT'] = project
 
 	result_search = db.search_file_data(filters={'filepath':path})
 	if result_search:
@@ -374,6 +394,10 @@ def get_cur_dcc():
 			dcc = program.rpartition('.')[0]
 			break
 
+	if dcc == 'maya':
+		if not sys.argv[0].endswith('maya.exe'):
+			dcc = ''
+
 	return dcc
 
 def open_scene(path, dcc, project, path_program = ''):
@@ -403,6 +427,12 @@ def open_scene(path, dcc, project, path_program = ''):
 		hou.hipFile.load(path, suppress_save_prompt=False)
 		check_open = True
 
+	elif dcc == 'blender':
+
+		import bpy
+
+		bpy.ops.wm.open_mainfile(filepath = path)
+
 	else:
 		if path_program:
 
@@ -412,13 +442,12 @@ def open_scene(path, dcc, project, path_program = ''):
 			elif path.endswith('.hip') or path.endswith('.hiplc') or path.endswith('.hipnc'):
 				subprocess.Popen([path_program, path])
 
+			elif path.endswith('.blend'):
+				subprocess.Popen([path_program, path])
+
 		else:
 			print(':: TOOL MASSAGE :: Please Select Program')
 
-	return check_open
-
-
-	
 	# record recent file
 	#-------------------
 	db = db_file.SQLITE_FILE_DB()
@@ -430,3 +459,12 @@ def open_scene(path, dcc, project, path_program = ''):
 		project=project , 
 		dcc=dcc, 
 		date=date )
+
+	return check_open
+
+
+if __name__ == '__main__':
+	
+	data = check_list_project()
+	# pprint(data)
+
