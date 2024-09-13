@@ -199,8 +199,8 @@ def get_program_path(program_name, ver):
 	
 	for path in common_paths:
 		for root, dirs, files in os.walk(path):
-			if f"{program_name}.exe" in files and ver in root:
-				path = os.path.join(root, f"{program_name}.exe")
+			if "{}.exe".format(program_name) in files and ver in root:
+				path = os.path.join(root, "{}.exe".format(program_name))
 				path = path.replace('\\', '/')
 				return path
 	return None
@@ -383,15 +383,15 @@ def get_recent_file():
 def get_cur_dcc():
 
 	dcc = ''
-	programs = ['maya.exe', 'houdini.exe', 'blender.exe']
+	programs = ['houdini.exe']
 
 	if sys.argv[0]:
 
 		if sys.argv[0].endswith('maya.exe'):
-			dcc == 'maya'
+			dcc = 'maya'
 
 		elif sys.argv[0].endswith('blender.exe'):
-			dcc == 'blender'
+			dcc = 'blender'
 
 	else:
 
@@ -401,14 +401,6 @@ def get_cur_dcc():
 			if program.lower() in output.lower():
 				dcc = program.rpartition('.')[0]
 				break
-
-		if dcc == 'maya':
-			if not sys.argv[0].endswith('maya.exe'):
-				dcc = ''
-
-		elif dcc == 'blender':
-			if not sys.argv[0].endswith('blender.exe'):
-				dcc == ''
 
 	return dcc
 

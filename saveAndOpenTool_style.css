@@ -19,9 +19,15 @@ QListWidget{
     border: none;
     color:rgb(190, 190, 190);
 }
+QHeaderView{
+    background:rgb(0,0,0);
+    border: 0px solid;
+    color: rgb(190, 190, 190);
+}
 QHeaderView:section{
     background:rgba(0,0,0,0);
     border: 0px solid;
+    color: rgb(190, 190, 190);
 }
 QTreeWidget:item{
     background:rgba(0,0,0,0);
@@ -126,17 +132,20 @@ QAbstractItemView:item:hover{
     background:rgb(55, 55, 55);
 }
 QSplitter{
-    background: rgba(0,0,0,0)
+    background: rgba(0,0,0,0);
+    image: none;
 }
 QSplitter:handle{
     background:rgb(70,70,70); 
+    image: none;
     border: none;
-    margin-top:25px; 
-    margin-bottom:25px; 
+    margin-top:40px; 
+    margin-bottom:40px; 
     min-width: 2px; 
-    max-width: 2px}
+    max-width: 2px;}
 QLineEdit{
     color: rgb(190, 190, 190);
     background: rgb(30, 30, 30); 
     border: 2px; 
     border-bottom: 2px solid rgb(60, 60, 60)}
+

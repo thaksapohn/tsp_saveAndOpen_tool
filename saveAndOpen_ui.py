@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import platform
-import logging
+# import logging
 import copy
 from datetime import datetime
 from pprint import pprint
@@ -21,14 +21,14 @@ if PY_VERSION == 3:
 	from importlib import reload
 
 MODULE_PATH = os.path.dirname(__file__).replace('\\', '/')
-PATHS = [ MODULE_PATH ]
+PATHS = [ MODULE_PATH , os.path.dirname(MODULE_PATH)]
 for path in PATHS:
 	if not path in sys.path:
 		sys.path.append(path)
 
 import libs.src.saveAndOpen_func as func
 reload(func)
-import utilityDialog as util
+import sao_utilityDialog as util
 reload(util)
 
 DCC = func.get_cur_dcc()
@@ -166,6 +166,9 @@ class SceneManagerUI(QDialog):
 	def initBodyWidget(self):
 
 		self.bodyLayout = QSplitter()
+		self.bodyLayout.setHandleWidth(2)
+		self.bodyLayout.setOrientation(Qt.Horizontal)
+		self.bodyLayout.setStyleSheet(self.css_main)
 		if DCC:
 			self.bodyLayout.setFixedHeight(730)
 		else:
@@ -588,7 +591,7 @@ class SceneManagerUI(QDialog):
 							folders_path.append(fullpath)
 
 		else:
-			folders_path = ["{}:/".format(d) for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+			folders_path = ["{}:/".format(d) for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists("{}:\\".format(d))]
 
 		folders_path.sort()
 		files_path.sort()
@@ -714,32 +717,37 @@ class SceneManagerUI(QDialog):
 
 		for data in recent_files[:10]:
 
-			item = QTreeWidgetItem(self.recentTree)
-			self.recentTree.addTopLevelItem(item)
+			ext = data['name'].rpartition('.')[-1]
 
-			if data['name'].endswith('.ma'):
-				item.setIcon(0, QIcon('{}/icons/ma_file.png'.format(MODULE_PATH)))
+			if ext in self.ext:
 
-			elif data['name'].endswith('.mb'):
-				item.setIcon(0, QIcon('{}/icons/mb_file.png'.format(MODULE_PATH)))
+				item = QTreeWidgetItem(self.recentTree)
+				self.recentTree.addTopLevelItem(item)
 				
-			elif data['name'].endswith('.hip') or data['name'].endswith('.hiplc') or data['name'].endswith('.hipnc'):
-				item.setIcon(0, QIcon('{}/icons/houdini.png'.format(MODULE_PATH)))
 
-			elif data['name'].endswith('.hip') or data['name'].endswith('.blend'):
-				item.setIcon(0, QIcon('{}/icons/blender.png'.format(MODULE_PATH)))
+				if data['name'].endswith('.ma'):
+					item.setIcon(0, QIcon('{}/icons/ma_file.png'.format(MODULE_PATH)))
 
-			else:
-				item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
+				elif data['name'].endswith('.mb'):
+					item.setIcon(0, QIcon('{}/icons/mb_file.png'.format(MODULE_PATH)))
+					
+				elif data['name'].endswith('.hip') or data['name'].endswith('.hiplc') or data['name'].endswith('.hipnc'):
+					item.setIcon(0, QIcon('{}/icons/houdini.png'.format(MODULE_PATH)))
 
-			date = data['date'].rpartition('.')[0]
-			date = date.replace('-', '/')
-			date = date.rpartition(':')[0]
+				elif data['name'].endswith('.hip') or data['name'].endswith('.blend'):
+					item.setIcon(0, QIcon('{}/icons/blender.png'.format(MODULE_PATH)))
 
-			item.setText(0, data['name'])
-			item.setText(1, date)
-			item.setText(2, data['comment'])
-			item.setText(3, data['path'])
+				else:
+					item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
+
+				date = data['date'].rpartition('.')[0]
+				date = date.replace('-', '/')
+				date = date.rpartition(':')[0]
+
+				item.setText(0, data['name'])
+				item.setText(1, date)
+				item.setText(2, data['comment'])
+				item.setText(3, data['path'])
 			
 	def doClickOpenScene(self):
 
@@ -898,6 +906,7 @@ class SceneManagerUI(QDialog):
 def main():
 
 	startTime = time.time()
+	print(':: TOOL MASSAGE :: DCC --> {}'.format(DCC))
 
 	if DCC == 'maya':
 
@@ -923,6 +932,8 @@ def main():
 		import hou
 
 		temp = hou.ui.mainQtWindow()
+		if temp:
+			temp.setStyleSheet('background:none;')
 		
 		houdini_ui = SceneManagerUI(parent=temp, ext=['hiplc', 'hip', 'hipnc'], project=PROJECT)
 		houdini_ui.show()
