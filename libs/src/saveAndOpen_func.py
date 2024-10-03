@@ -383,7 +383,7 @@ def get_recent_file():
 def get_cur_dcc():
 
 	dcc = ''
-	programs = ['houdini.exe']
+	programs = ['houdini.exe', 'nuke.exe']
 
 	if sys.argv[0]:
 
@@ -395,12 +395,27 @@ def get_cur_dcc():
 
 	else:
 
-		for program in programs:
-			cmd = 'tasklist /fi "imagename eq {}"'.format(program)
-			output = subprocess.check_output(cmd, shell= True).decode()
-			if program.lower() in output.lower():
-				dcc = program.rpartition('.')[0]
-				break
+		try:
+
+			import psutil
+
+			programs_name = ['Nuke', 'Houdini']
+
+			for program in programs_name:
+				for proc in psutil.process_iter():
+					try:
+						if program in proc.name():
+							dcc = program.lower()
+							break
+					except: pass
+		except:
+
+			for program in programs:
+				cmd = 'tasklist /fi "imagename eq {}"'.format(program)
+				output = subprocess.check_output(cmd, shell= True).decode()
+				if program.lower() in output.lower():
+					dcc = program.rpartition('.')[0]
+					break
 
 	return dcc
 

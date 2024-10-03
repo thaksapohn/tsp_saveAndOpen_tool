@@ -948,6 +948,19 @@ def main():
 		ui = SceneManagerUI(ext=['blend'], project=PROJECT)
 		ui.exec_()
 
+	elif DCC == 'nuke':
+
+		nuke_parent = ''
+
+		for obj in QApplication.instance().topLevelWidgets():
+			if (obj.inherits('QMainWindow') and obj.metaObject().className() == 'Foundry::UI::DockMainWindow'):
+				nuke_parent =  obj
+				break
+
+		if nuke_parent:
+			ui = SceneManagerUI(parent=nuke_parent, ext=['.nk', '.nuke'])
+			ui.show()
+
 
 	else:
 		app = QApplication(sys.argv)
@@ -959,6 +972,7 @@ def main():
 	timeLap = endTime - startTime
 	print(':: TOOL MASSAGE :: Time Open | {}'.format(timeLap))
 	# logger.log(logging.INFO, '[{}] DCC : {} | {} | Time Open : {}'.format(PROJ_CODE, DCC, state, timeLap))
+
 
 
 if __name__ == '__main__':
