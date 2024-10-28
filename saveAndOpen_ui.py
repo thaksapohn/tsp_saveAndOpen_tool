@@ -745,7 +745,7 @@ class SceneManagerUI(QDialog):
 				date = date.rpartition(':')[0]
 
 				item.setText(0, data['name'])
-				item.setText(1, date)
+				item.setText(1, date) 
 				item.setText(2, data['comment'])
 				item.setText(3, data['path'])
 			
@@ -960,7 +960,6 @@ def main():
 		if nuke_parent:
 			ui = SceneManagerUI(parent=nuke_parent, ext=['.nk', '.nuke'])
 			ui.show()
-
 
 	else:
 		app = QApplication(sys.argv)

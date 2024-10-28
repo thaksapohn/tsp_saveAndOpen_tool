@@ -116,6 +116,7 @@ def check_list_project():
 	maya_list = []
 	houdini_list = []
 	blender_list = []
+	nuke_list = []
 
 	dataReturn = []
 
@@ -187,6 +188,17 @@ def check_list_project():
 
 					data = {'name': display_name, 'path': path, 'version': ver, 'shortname': 'blender'}
 					dataReturn.append(data)
+			
+			elif 'nuke' in display_name.lower() and not 'Furnace' in display_name:
+				if not display_name in nuke_list:
+
+					nuke_list.append(display_name)
+					
+					ver = display_name.split(' ')[-1]
+					path = get_program_path('nuke', ver)
+
+					data = {'name': display_name, 'path': path, 'version': ver, 'shortname': 'nuke'}
+					dataReturn.append(data)
 
 	return dataReturn
 
@@ -199,10 +211,17 @@ def get_program_path(program_name, ver):
 	
 	for path in common_paths:
 		for root, dirs, files in os.walk(path):
+			ver_new = ver.rpartition('v')[0]
 			if "{}.exe".format(program_name) in files and ver in root:
 				path = os.path.join(root, "{}.exe".format(program_name))
 				path = path.replace('\\', '/')
 				return path
+
+			elif "{}{}.exe".format(program_name.title(), ver_new) in files and ver in root:
+				path = os.path.join(root, "{}{}.exe".format(program_name.title(), ver_new))
+				path = path.replace('\\', '/')
+				return path
+
 	return None
 	
 def get_dcc():
@@ -484,6 +503,6 @@ def open_scene(path, dcc, project, path_program = ''):
 
 if __name__ == '__main__':
 	
-	data = get_recent_file()
+	data = check_list_project()
 	pprint(data)
 

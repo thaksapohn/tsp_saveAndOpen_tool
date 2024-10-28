@@ -104,6 +104,10 @@ class DccItemWidget(QListWidgetItem):
 		elif dcc == 'blender':
 			pixmap = QPixmap('{path_thumb}/blender.png'.format(path_thumb=path_thumb))
 			pixmap = pixmap.scaled(40, 40, Qt.KeepAspectRatio)
+		
+		elif dcc == 'nuke':
+			pixmap = QPixmap('{path_thumb}/nuke_1.png'.format(path_thumb=path_thumb))
+			pixmap = pixmap.scaled(40, 40, Qt.KeepAspectRatio)
 
 		else:
 			pixmap = QPixmap('{path_thumb}/tool.png'.format(path_thumb=path_thumb))
