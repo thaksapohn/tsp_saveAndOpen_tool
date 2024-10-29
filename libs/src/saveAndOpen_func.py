@@ -127,13 +127,13 @@ def check_list_project():
 	# Execute the command and decode the output
 	#------------------------------------------
 	output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
-	path_install = ''
 	
 	# Parse the output
 	#-----------------
 	for line in output.splitlines():
 
 		display_name = ''
+		path_install = ''
 
 		if "DisplayName" in line:
 			display_name = line.split("    ")[-1].strip()
@@ -200,7 +200,146 @@ def check_list_project():
 					data = {'name': display_name, 'path': path, 'version': ver, 'shortname': 'nuke'}
 					dataReturn.append(data)
 
+	if not dataReturn:
+		dataReturn = get_list_program()
+
 	return dataReturn
+
+def get_list_program():
+
+	common_paths = [
+		r"C:\Program Files",
+		r"C:\Program Files (x86)"
+	]
+
+	dataReturn = []
+
+	for path in common_paths:
+		for root_program in os.listdir(path):
+
+			name_program = ''
+
+			if root_program == 'Autodesk':
+
+				name_program = 'maya'
+				root_path = '{}/{}'.format(path, root_program)
+
+				for name in os.listdir(root_path):
+
+					result_ver = re.findall('([0-9]+)', name)
+
+					if result_ver:
+
+						ver = result_ver[0]
+						path_check = '{}/{}'.format(root_path, name)
+						data = {}
+
+						for root, dirs, files in os.walk(path_check):
+
+							ver_new = ver.rpartition('v')[0]
+
+							if "{}.exe".format(name_program) in files and ver in root:
+								path_program = os.path.join(root, "{}.exe".format(name_program))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+							elif "{}{}.exe".format(name_program.title(), ver_new) in files and ver in root:
+								path_program = os.path.join(root, "{}{}.exe".format(name_program.title(), ver_new))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+						if data:
+							dataReturn.append(data)
+
+			elif root_program == 'Blender Foundation':
+
+				name_program = 'blender'
+				root_path = '{}/{}'.format(path, root_program)
+
+				for name in os.listdir(root_path):
+
+					result_ver = re.findall('([0-9].+)', name)
+
+					if result_ver:
+
+						ver = result_ver[0]
+						path_check = '{}/{}'.format(root_path, name)
+						data = {}
+
+						for root, dirs, files in os.walk(path_check):
+
+							ver_new = ver.rpartition('v')[0]
+
+							if "{}.exe".format(name_program) in files and ver in root:
+								path_program = os.path.join(root, "{}.exe".format(name_program))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+							elif "{}{}.exe".format(name_program.title(), ver_new) in files and ver in root:
+								path_program = os.path.join(root, "{}{}.exe".format(name_program.title(), ver_new))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+						if data:
+							dataReturn.append(data)
+
+			elif root_program == 'Side Effects Software':
+				name_program = 'houdini'
+
+				root_path = '{}/{}'.format(path, root_program)
+
+				for name in os.listdir(root_path):
+
+					result_ver = re.findall('([0-9].+)', name)
+
+					if result_ver:
+
+						ver = result_ver[0]
+						path_check = '{}/{}'.format(root_path, name)
+						data = {}
+
+						for root, dirs, files in os.walk(path_check):
+
+							ver_new = ver.rpartition('v')[0]
+
+							if "{}.exe".format(name_program) in files and ver in root:
+								path_program = os.path.join(root, "{}.exe".format(name_program))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+							elif "{}{}.exe".format(name_program.title(), ver_new) in files and ver in root:
+								path_program = os.path.join(root, "{}{}.exe".format(name_program.title(), ver_new))
+								path_program = path_program.replace('\\', '/')
+								data = {'name': name, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+						if data:
+							dataReturn.append(data)
+
+			elif 'Nuke' in root_program:
+
+				name_program = 'nuke'
+				result_ver = re.findall('([0-9].+)', root_program)
+
+				if result_ver:
+					
+					ver = result_ver[0]
+					ver_new = ver.rpartition('v')[0]
+					path_check = '{}/{}'.format(path, root_program)
+					data = {}
+					name_file = "Nuke{}.exe".format(ver_new)
+					files = os.listdir(path_check)
+
+					if name_file in files:
+
+						path_program = os.path.join(root, name_file.format(name_program))
+						path_program = path_program.replace('\\', '/')
+						data = {'name': root_program, 'path': path_program, 'version': ver, 'shortname': name_program}
+
+					if data:
+						dataReturn.append(data)
+
+	return dataReturn
+			
 
 def get_program_path(program_name, ver):
 

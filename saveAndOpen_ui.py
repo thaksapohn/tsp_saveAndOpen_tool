@@ -907,6 +907,7 @@ def main():
 
 	startTime = time.time()
 	print(':: TOOL MASSAGE :: DCC --> {}'.format(DCC))
+	# print(DCC)
 
 	if DCC == 'maya':
 
