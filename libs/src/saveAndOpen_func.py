@@ -331,7 +331,7 @@ def get_list_program():
 
 					if name_file in files:
 
-						path_program = os.path.join(root, name_file.format(name_program))
+						path_program = os.path.join(path_check, name_file.format(name_program))
 						path_program = path_program.replace('\\', '/')
 						data = {'name': root_program, 'path': path_program, 'version': ver, 'shortname': name_program}
 
@@ -388,6 +388,9 @@ def open_dcc(path, project='', dcc=''):
 
 		elif dcc == 'blender':
 			subprocess.Popen([path, '--factory-startup'])
+
+		elif dcc == 'nuke':
+			subprocess.Popen([path])
 			
 def get_path_default(project):
 
@@ -464,6 +467,7 @@ def get_data_file(path=''):
 	return data
 	
 def save_scene(path, dcc, project, comment=''):
+
 	db = db_file.SQLITE_FILE_DB()
 	
 	if dcc == 'maya':
@@ -484,6 +488,11 @@ def save_scene(path, dcc, project, comment=''):
 
 		import bpy
 		bpy.ops.wm.save_as_mainfile(filepath=path)
+
+	elif dcc == 'nuke':
+
+		import nuke
+		nuke.scriptSaveAs(path)
 
 	if project:
 		os.environ['SAO_PROJECT'] = project

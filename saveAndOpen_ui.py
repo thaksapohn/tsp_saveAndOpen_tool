@@ -557,6 +557,8 @@ class SceneManagerUI(QDialog):
 
 		if str(current_item) in self.dcc_dataItem.keys():
 
+			# pprint(self.dcc_dataItem[str(current_item)])
+
 			path = self.dcc_dataItem[str(current_item)]['path']
 			func.open_dcc(path=path, project=self.project, dcc=self.dcc_dataItem[str(current_item)]['shortname'])
 
@@ -585,6 +587,7 @@ class SceneManagerUI(QDialog):
 					if not item == '__pycache__':
 						if '.' in item:
 							ext = item.rpartition('.')[-1]
+							print(ext)
 							if ext in self.ext:
 								files_path.append(fullpath)
 						else:
@@ -622,7 +625,10 @@ class SceneManagerUI(QDialog):
 
 				elif path.endswith('.hip') or path.endswith('.blend'):
 					item.setIcon(0, QIcon('{}/icons/blender.png'.format(MODULE_PATH)))
-
+				
+				elif path.endswith('.nk') or path.endswith('.nuke'):
+					item.setIcon(0, QIcon('{}/icons/nuke.png'.format(MODULE_PATH)))
+				
 				else:
 					item.setIcon(0, QIcon('{}/icons/files.png'.format(MODULE_PATH)))
 
@@ -959,7 +965,7 @@ def main():
 				break
 
 		if nuke_parent:
-			ui = SceneManagerUI(parent=nuke_parent, ext=['.nk', '.nuke'])
+			ui = SceneManagerUI(parent=nuke_parent, ext=['nk', 'nuke'])
 			ui.show()
 
 	else:
